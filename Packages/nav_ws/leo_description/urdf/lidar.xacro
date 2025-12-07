@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<robot>
+
+  <joint name="rplidar_joint" type="fixed"> #  <!--Specifying fixed joint -->
+    <origin xyz="0.0775 0 0.05"/> <!--Defining position w.r.t parent link (body_link)   -->
+    <parent link="base_link"/>  <!-- # What the lidar is being attached to -->
+    <child link="rplidar_link"/> <!-- # The lidar -->
+  </joint>   
+  
+  
+  <!--Defining visual and collision properties of lidar (could add 3D model of lidar) -->
+  <link name="rplidar_link"> <!--Defining lidar link name  -->
+
+
+    <!--Visual properties of lidar's base-->
+
+    <visual>
+      <origin xyz="0 0 0.0085"/>
+      <geometry>
+        <box size="0.080 0.087 0.017"/>
+      </geometry>
+      <material name="support">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+    
+    <!--Visual properties of lidar's main body -->
+    <visual>
+      <origin xyz="0 0 0.034"/>
+      <geometry>
+        <cylinder radius="0.038" length="0.041"/>
+      </geometry>
+      <material name="lidar">
+        <color rgba="1.0 0.0 0.0 0.7"/>
+      </material>
+    </visual>
+    
+    <!-- Collision properties of lidar's base -->
+    <collision>
+      <origin xyz="0 0 0.0085"/>
+      <geometry>
+        <box size="0.080 0.087 0.017"/>
+      </geometry>
+    </collision>
+    
+    <!-- Collision properties of lidar's main body -->
+    <collision>
+      <origin xyz="0 0 0.034"/>
+      <geometry>
+        <cylinder radius="0.038" length="0.041"/>
+      </geometry>
+    </collision>
+    
+  </link>
+
+  <!--<gazebo>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <frame_id>rplidar_link</frame_id>
+      <render_engine>ogre2</render_engine>
+    </plugin>
+  </gazebo>-->
+
+  <gazebo reference = "rplidar_link">
+    <sensor name = "base_scan" type = "gpu_lidar">
+      <pose relative_to='rplidar_link'> 0 0 0 0 0 0 </pose>
+
+      <topic>scan</topic>
+      <gz_frame_id>rplidar_link</gz_frame_id>
+      <update_rate>15</update_rate>
+
+      <lidar>
+        <scan> 
+          <horizontal> 
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14</min_angle>
+            <max_angle>3.14</max_angle>
+          </horizontal>
+        </scan>
+
+        <range>
+          <min>0.03</min>
+          <max>12</max>
+          <resolution>0.005</resolution>
+        </range>
+      </lidar>
+
+      <always_on>1</always_on>
+      <visualize>1</visualize>     
+    </sensor>
+  </gazebo>
+          
+
+<link name="leo_rover/base_footprint/base_scan"/>
+
+<joint name="scan_tf_joint" type="fixed">
+  <origin xyz="0 0 0.483" rpy="0 0 ${-pi/2}"/>
+  <parent link="rplidar_link"/>
+  <child link="leo_rover/base_footprint/base_scan"/>
+</joint> 
+
+</robot>
+
+
+
+

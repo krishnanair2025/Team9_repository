@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot name="cuboid_with_cylinders">
+
+  <!-- Cuboid object (lowered so collisions don't intersect cylinders) -->
+  <link name="cuboid_object_link">
+
+    <visual>
+      <origin xyz="0 0 -0.03"/>
+      <geometry>
+        <box size="0.1 0.1 0.02"/>
+      </geometry>
+      <material name="cuboid_material">
+        <color rgba="0.0 0.3 0.8 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 -0.03"/>
+      <geometry>
+        <box size="0.1 0.1 0.02"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <mass value="1.0"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+
+  </link>
+
+  <!-- Cuboid attached to rover -->
+  <joint name="cuboid_object_joint" type="fixed">
+    <origin xyz="-0.1225 0 0.085" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="cuboid_object_link"/>
+  </joint>
+
+</robot>
+
