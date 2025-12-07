@@ -8,6 +8,9 @@ from example_interfaces.srv import SetBool
 import numpy as np
 
 class FrontierExplorationNode(Node):
+    """ ROS2 Node that repeatedly sends frontier goals to Nav2, its state is triggered using a service call
+    from the task manager. It can be paused or started as required. """
+
     def __init__(self):
         super().__init__('frontier_exploration_node')
         self._action_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
@@ -20,13 +23,14 @@ class FrontierExplorationNode(Node):
             10
         )
 
+        # Initialising service to control state of the frontier explorer
         self.exploration_service = self.create_service(
             srv_type = SetBool,
             srv_name= '/explore_status',
             callback = self.exploration_client_callback
         )
 
-
+        # Internal variables
         self._current_goal_handle = None
         self.startx = 0.3
         self.starty = 1.0
@@ -35,6 +39,8 @@ class FrontierExplorationNode(Node):
         self.exploring = False
         self.goal_active = False
 
+
+    # Callback for request to start or stop explorer
     def exploration_client_callback(self, request, response):
         self.exploring = request.data
         response.success = True
@@ -53,14 +59,14 @@ class FrontierExplorationNode(Node):
 
         return response
 
-    # Method that is called when map is received
+    # Callback for accessing the occupancy grid as well as calling the pick frontier and send goal method
     def map_callback(self, msg):
         # Extracting map information
         self.map_info = msg.info
         data = np.array(msg.data, dtype=np.int8)
         self.map_data = data.reshape((msg.info.height, msg.info.width))
 
-
+        # Only picks and sends a goal if explorer is active and there is no current goal being pursued.
         if (self.exploring == True) and (self.goal_active == False):
 
             self.get_logger().info('Picking new frontier')
@@ -74,7 +80,7 @@ class FrontierExplorationNode(Node):
                 pose = self.frontier_to_pose(frontier)
                 self.send_goal(pose)
     
-
+    # Method to pick frontier from the occupancy grid
     def pick_frontier(self):
         if self.map_data is None:
             return None
@@ -140,6 +146,7 @@ class FrontierExplorationNode(Node):
 
         self.goal_active = True
 
+
     # callback for nav2 action server's response
     def goal_response_callback(self, future):
         goal_handle = future.result()
@@ -153,11 +160,13 @@ class FrontierExplorationNode(Node):
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
 
+
     # callback for nav2 action server's result
     def get_result_callback(self, future):
         result = future.result().result
         self.goal_active = False
 
+    # callback for cancelling a goal
     def cancel_done_callback(self, future):
         result = future.result()
         if result:
@@ -167,6 +176,7 @@ class FrontierExplorationNode(Node):
         
         # Clear the goal handle after cancelling
         self._current_goal_handle = None
+
 
 def main(args = None):
     try: 
