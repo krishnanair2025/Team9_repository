@@ -59,7 +59,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>file:///home/student14/Team9_repository/Packages/nav_ws/src/config/outer_boundary.obj</uri>
+              <uri>file:///home/student14/Team9_repository/Workspaces/nav_ws/src/config/outer_boundary.obj</uri>
               <scale>0.01 0.01 0.01</scale>
             </mesh>
           </geometry>
@@ -71,7 +71,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>file:///home/student14/Team9_repository/Packages/nav_ws/src/config/outer_boundary.obj</uri>
+              <uri>file:///home/student14/Team9_repository/Workspaces/nav_ws/src/config/outer_boundary.obj</uri>
               <scale>0.01 0.01 0.01</scale>
             </mesh>
           </geometry>
@@ -169,7 +169,7 @@
         <collision name='cylinder_collision'>
           <geometry>
             <cylinder>
-              <radius>0.6</radius>
+              <radius>0.3</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
@@ -177,7 +177,7 @@
         <visual name='cylinder_visual'>
           <geometry>
             <cylinder>
-              <radius>0.6</radius>
+              <radius>0.3</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>

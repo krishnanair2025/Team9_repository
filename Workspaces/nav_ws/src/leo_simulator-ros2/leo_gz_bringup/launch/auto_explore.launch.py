@@ -33,7 +33,7 @@ def generate_launch_description():
     )
 
     slam_params_path = os.path.expanduser(
-        '~/Team9_repository/Packages/nav_ws/src/config/mapper_params_online_async.yaml'
+        '~/Team9_repository/Workspaces/nav_ws/src/config/mapper_params_online_async.yaml'
     )
 
     # Include SLAM Toolbox online async launch file
@@ -54,7 +54,7 @@ def generate_launch_description():
     # --- Nav2 Navigation ---
 # Path to your custom Nav2 parameters
     nav2_params_path = os.path.expanduser(
-        '~/Team9_repository/Packages/nav_ws/src/config/nav2_params.yaml'
+        '~/Team9_repository/Workspaces/nav_ws/src/config/nav2_params.yaml'
     )
 
     # --- Nav2 Navigation ---
@@ -81,7 +81,7 @@ def generate_launch_description():
     )
 
     # --- RViz2 with your custom config ---
-    rviz_config_path = os.path.expanduser('~/Team9_repository/Packages/nav_ws/src/config/leo_nav_mapping.rviz')
+    rviz_config_path = os.path.expanduser('~/Team9_repository/Workspaces/nav_ws/src/config/leo_nav_mapping.rviz')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
