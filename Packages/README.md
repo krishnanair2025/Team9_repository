@@ -1,3 +1,3 @@
-# Team 9 ROS2 Packages
+# Team 9 ROS2 Workspaces
 
-This directory contains the ROS2 packages developed by each sub-team in independent ROS2 workspaces. 
+This directory contains the independent ROS2 workspaces for each sub-team.
