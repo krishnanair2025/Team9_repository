@@ -15,11 +15,19 @@ class FrontierExplorationNode(Node):
         super().__init__('frontier_exploration_node')
         self._action_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
 
-        # Initialising subscriber to get occupancy grid from SLAM
+        # Initialising subscriber to get map from SLAM
         self.map_subscriber = self.create_subscription(
             OccupancyGrid,
             '/map',
             self.map_callback,
+            10
+        )
+
+        # Intialising subscriber to get global costmap
+        self.costmap_subscriber = self.create_subscription(
+            OccupancyGrid,
+            'global_costmap/costmap',
+            self.costmap_callback,
             10
         )
 
@@ -36,7 +44,9 @@ class FrontierExplorationNode(Node):
         self.starty = 1.0
         self.map_data = None
         self.map_info = None
-        self.exploring = False
+        self.costmap_data = None
+        self.costmap_info = None
+        self.exploring = True
         self.goal_active = False
 
 
@@ -58,6 +68,13 @@ class FrontierExplorationNode(Node):
                 cancel_future.add_done_callback(self.cancel_done_callback)
 
         return response
+    
+    # Callback for accessing the costmap
+    def costmap_callback(self, msg):
+        # Extracting map information
+        self.costmap_info = msg.info
+        data = np.array(msg.data, dtype=np.int8)
+        self.costmap_data = data.reshape((msg.info.height, msg.info.width))
 
     # Callback for accessing the occupancy grid as well as calling the pick frontier and send goal method
     def map_callback(self, msg):
@@ -79,10 +96,16 @@ class FrontierExplorationNode(Node):
                 # calling send_goal function with pose as argument
                 pose = self.frontier_to_pose(frontier)
                 self.send_goal(pose)
+
+
+
     
     # Method to pick frontier from the occupancy grid
     def pick_frontier(self):
         if self.map_data is None:
+            return None
+        
+        if self.costmap_data is None:
             return None
 
         # Identify free and unknown cells
@@ -106,16 +129,48 @@ class FrontierExplorationNode(Node):
         # Find frontier coordinates
         points = np.argwhere(frontier_mask)
 
+        # rover's height and width including additional 50mm buffer
+        rover_width = (448/1000)+0.1
+        rover_length = (425/1000)+0.1
+
+        res = self.costmap_info.resolution
+        rover_width_cells = int(np.ceil(rover_width / res)) 
+        rover_length_cells = int(np.ceil(rover_length / res)) 
+
         if len(points) == 0:
             self.get_logger().info('No frontiers found')
             self.exploring = False
             return None
+        
+        safe_frontiers = []
+
+        height,width = self.costmap_data.shape
+
+        for candidate in points:
+            y,x = candidate
+
+            x_start = int(x - rover_width_cells/2)
+            x_end = int(x + rover_width_cells/2)
+            y_start = int(y - rover_length_cells/2)
+            y_end = int(y + rover_length_cells/2)
+
+            if x_start < 0 or y_start < 0 or x_end >= width or y_end >= height:
+                continue
+
+            footprint_mask = self.costmap_data[y_start:y_end+1, x_start:x_end+1]
+
+            if np.all(footprint_mask == 0):
+                safe_frontiers.append(candidate)
+
+        if len(safe_frontiers)==0:
+            self.get_logger().info('No safe frontiers found')
+            self.exploring = False
+            return None
 
         # Randomly pick one frontier
-        idx = np.random.choice(len(points))
-        return points[idx]
+        idx = np.random.choice(len(safe_frontiers))
+        return safe_frontiers[idx]
 
-    
     # Method which converts chosen frontier index to a pose for nav2
     def frontier_to_pose(self,cell):
         y,x = cell
@@ -154,6 +209,8 @@ class FrontierExplorationNode(Node):
 
         if not goal_handle.accepted:
             self.get_logger().info("Goal rejected, attempting to pick new goal")
+            self._current_goal_handle = None
+            self.goal_active = False
             return
         
         self.get_logger().info('Goal accepted')

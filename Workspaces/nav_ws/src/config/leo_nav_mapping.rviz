@@ -6,8 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Grid1/Status1
         - /TF1/Frames1
+        - /RobotModel1
+        - /Polygon1
       Splitter Ratio: 0.5
     Tree Height: 707
   - Class: rviz_common/Selection
@@ -174,6 +175,8 @@ Visualization Manager:
           Value: false
         camera_optical_frame:
           Value: false
+        cuboid_object_link:
+          Value: true
         imu_frame:
           Value: false
         leo_rover/base_footprint/base_scan:
@@ -211,6 +214,8 @@ Visualization Manager:
                 camera_frame:
                   camera_optical_frame:
                     {}
+                cuboid_object_link:
+                  {}
                 imu_frame:
                   {}
                 rocker_L_link:
@@ -227,6 +232,115 @@ Visualization Manager:
                   leo_rover/base_footprint/base_scan:
                     {}
       Update Interval: 0
+      Value: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        antenna_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        camera_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        cuboid_object_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        imu_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        leo_rover/base_footprint/base_scan:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        rocker_L_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rocker_R_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rplidar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_FL_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_FR_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_RL_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_RR_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/Polygon
+      Color: 25; 255; 0
+      Enabled: true
+      Name: Polygon
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /global_costmap/published_footprint
       Value: true
   Enabled: true
   Global Options:
@@ -274,25 +388,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 14.220280647277832
+      Distance: 4.7483296394348145
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.7131543159484863
-        Y: 1.599279522895813
-        Z: -1.5277190208435059
+        X: 0.5792386531829834
+        Y: -0.026996776461601257
+        Z: -0.8128520846366882
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 0.9897968769073486
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.0003962516784667969
+      Yaw: 5.503580570220947
     Saved: ~
 Window Geometry:
   Displays:
