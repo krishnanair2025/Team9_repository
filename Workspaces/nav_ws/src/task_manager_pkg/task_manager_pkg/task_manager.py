@@ -105,7 +105,6 @@ class TaskManagerNode(Node):
 
 
 
-
     # Callback function for trigger service call from terminal to start rover
     def trigger_callback(self, request, response):
 
