@@ -2,7 +2,7 @@
 <robot>
 
   <joint name="rplidar_joint" type="fixed"> #  <!--Specifying fixed joint -->
-    <origin xyz="0.0775 0 0.05"/> <!--Defining position w.r.t parent link (body_link)   -->
+    <origin xyz="0.0841 0 0.0115"/> <!--Defining position w.r.t parent link (body_link)   -->
     <parent link="base_link"/>  <!-- # What the lidar is being attached to -->
     <child link="rplidar_link"/> <!-- # The lidar -->
   </joint>   
@@ -15,9 +15,9 @@
     <!--Visual properties of lidar's base-->
 
     <visual>
-      <origin xyz="0 0 0.0085"/>
+      <origin xyz="0 0 0.0015"/>
       <geometry>
-        <box size="0.080 0.087 0.017"/>
+        <box size="0.080 0.087 0.0185"/>
       </geometry>
       <material name="support">
         <color rgba="0.5 0.5 0.5 1.0"/>
@@ -26,7 +26,7 @@
     
     <!--Visual properties of lidar's main body -->
     <visual>
-      <origin xyz="0 0 0.034"/>
+      <origin xyz="0 0 0.0263"/>
       <geometry>
         <cylinder radius="0.038" length="0.041"/>
       </geometry>
@@ -37,15 +37,15 @@
     
     <!-- Collision properties of lidar's base -->
     <collision>
-      <origin xyz="0 0 0.0085"/>
+      <origin xyz="0 0 0.0015"/>
       <geometry>
-        <box size="0.080 0.087 0.017"/>
+        <box size="0.080 0.087 0.0185"/>
       </geometry>
     </collision>
     
     <!-- Collision properties of lidar's main body -->
     <collision>
-      <origin xyz="0 0 0.034"/>
+      <origin xyz="0 0 0.0263"/>
       <geometry>
         <cylinder radius="0.038" length="0.041"/>
       </geometry>
@@ -64,7 +64,7 @@
 
   <gazebo reference = "rplidar_link">
     <sensor name = "base_scan" type = "gpu_lidar">
-      <pose relative_to='rplidar_link'> 0 0 0 0 0 0 </pose>
+      <pose relative_to='rplidar_link'> 0 0 0.035 0 0 0 </pose>
 
       <topic>scan</topic>
       <gz_frame_id>rplidar_link</gz_frame_id>

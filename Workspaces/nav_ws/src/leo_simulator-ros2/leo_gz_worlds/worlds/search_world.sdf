@@ -106,6 +106,32 @@
       <static>true</static>
     </model>
 
+    <!-- Target object pedestal -->
+    <model name='obj_box'>
+      <pose>2 1 0.12 0 0 0</pose>
+      <link name='obj_box_link'>
+        <collision name='obj_box_collision'>
+          <geometry>
+            <box>
+              <size>0.205 0.205 0.205</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='obj_box_visual'>
+          <geometry>
+            <box>
+              <size>0.205 0.205 0.205</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
     <!-- Cylinder: green -->
     <model name='cylinder'>
       <pose>3.57 1.19 0.12 0 0 0</pose>
@@ -113,7 +139,7 @@
         <collision name='cylinder_collision'>
           <geometry>
             <cylinder>
-              <radius>0.3</radius>
+              <radius>0.2</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
@@ -121,13 +147,13 @@
         <visual name='cylinder_visual'>
           <geometry>
             <cylinder>
-              <radius>0.3</radius>
+              <radius>0.2</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
           <material>
-            <ambient>0 1 0 1</ambient>
-            <diffuse>0 1 0 1</diffuse>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
           </material>
         </visual>
       </link>
@@ -141,7 +167,7 @@
         <collision name='cylinder_collision'>
           <geometry>
             <cylinder>
-              <radius>0.4</radius>
+              <radius>0.25</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
@@ -149,13 +175,13 @@
         <visual name='cylinder_visual'>
           <geometry>
             <cylinder>
-              <radius>0.4</radius>
+              <radius>0.25</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
           <material>
-            <ambient>1 1 0 1</ambient>
-            <diffuse>1 1 0 1</diffuse>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
           </material>
         </visual>
       </link>
@@ -164,12 +190,12 @@
 
     <!-- Cylinder: blue -->
     <model name='cylinder_1'>
-      <pose>2.02 2.37 0.12 0 0 0</pose>
+      <pose>1.0 2.5 0.12 0 0 0</pose>
       <link name='cylinder_link'>
         <collision name='cylinder_collision'>
           <geometry>
             <cylinder>
-              <radius>0.3</radius>
+              <radius>0.25</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
@@ -177,13 +203,150 @@
         <visual name='cylinder_visual'>
           <geometry>
             <cylinder>
-              <radius>0.3</radius>
+              <radius>0.25</radius>
               <length>0.5</length>
             </cylinder>
           </geometry>
           <material>
-            <ambient>0 0 1 1</ambient>
-            <diffuse>0 0 1 1</diffuse>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
+    <!-- target cylinder 2 -->
+    <model name='target_cylinder_2'>
+      <pose>6.5 3.5 0.253 0 0 0</pose>
+      <link name='target_cylinder_2_link'>
+        <collision name='target_cylinder_2_collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.026</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='target_cylinder_2_visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.026</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
+    <!-- Target object pedestal -->
+    <model name='obj_2_box'>
+      <pose>6.5 3.5 0.12 0 0 0</pose>
+      <link name='obj_box_2_link'>
+        <collision name='obj_box_2_collision'>
+          <geometry>
+            <box>
+              <size>0.205 0.205 0.205</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='obj_box_2_visual'>
+          <geometry>
+            <box>
+              <size>0.205 0.205 0.205</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
+
+    <!-- target cylinder 1 -->
+    <model name='target_cylinder_1'>
+      <pose>2.0 1.0 0.253 0 0 0</pose>
+      <link name='target_cylinder_1_link'>
+        <collision name='target_cylinder_1_collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.026</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='target_cylinder_1_visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.026</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
+    <!-- target cylinder 2 -->
+    <model name='target_cylinder_3'>
+      <pose>2.5 3.5 0.253 0 0 0</pose>
+      <link name='target_cylinder_3_link'>
+        <collision name='target_cylinder_3_collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.026</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name='target_cylinder_3_visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.026</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0 1 0 1</ambient>
+            <diffuse>0 1 0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
+    <!-- Target object pedestal -->
+    <model name='obj_3_box'>
+      <pose>2.5 3.5 0.12 0 0 0</pose>
+      <link name='obj_box_3_link'>
+        <collision name='obj_box_3_collision'>
+          <geometry>
+            <box>
+              <size>0.205 0.205 0.205</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='obj_box_3_visual'>
+          <geometry>
+            <box>
+              <size>0.205 0.205 0.205</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
           </material>
         </visual>
       </link>

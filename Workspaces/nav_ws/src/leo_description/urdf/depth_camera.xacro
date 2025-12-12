@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="intel_realsense_d435i">
+
+  <!-- ====================== PROPERTIES ====================== -->
+  <xacro:property name="camera_width"  value="0.025"/>
+  <xacro:property name="camera_height" value="0.090"/>
+  <xacro:property name="camera_depth"  value="0.025"/>
+
+  <!-- ====================== CAMERA LINK ====================== -->
+  <link name="realsense_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${camera_width} ${camera_height} ${camera_depth}"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${camera_width} ${camera_height} ${camera_depth}"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <mass value="0.090"/> <!-- approx 90g -->
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0"
+               iyy="0.0001" iyz="0"
+               izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <!-- ====================== MOUNT JOINT ====================== -->
+  <joint name="realsense_mount_joint" type="fixed">
+    <origin xyz="0.10 0 0.1" rpy="0 0 0"/> 
+    <parent link="base_link"/>  <!-- change to your robot’s base link -->
+    <child link="realsense_link"/>
+  </joint>
+
+  <!-- ========================================================== -->
+  <!-- GAZEBO (GZ SIM) SENSOR PLUGIN FOR REALSENSE -->
+  <!-- ========================================================== -->
+  <gazebo reference="realsense_link">
+
+    <sensor name="realsense_rgbd" type="rgbd_camera">
+      <pose>0 0 0.1 0 0 0</pose>
+
+      <update_rate>30</update_rate>
+      <topic>camera/color/image_raw</topic>
+      <depth_topic>camera/depth/image_raw</depth_topic>
+
+      <camera>
+        <horizontal_fov>1.5</horizontal_fov>  <!-- approx D435i FOV -->
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>10.0</far>
+        </clip>
+      </camera>
+
+      <depth_camera>
+        <clip>
+          <near>0.1</near>
+          <far>10.0</far>
+        </clip>
+      </depth_camera>
+
+      <visualize>true</visualize>
+      <always_on>true</always_on>
+    </sensor>
+
+  </gazebo>
+
+
+  <!-- ====================== TF CHILD LINK ====================== -->
+  <link name="realsense_optical_frame"/>
+  <joint name="realsense_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    <parent link="realsense_link"/>
+    <child link="realsense_optical_frame"/>
+  </joint>
+
+</robot>

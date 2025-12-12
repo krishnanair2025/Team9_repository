@@ -33,7 +33,13 @@ class DummyObjectDetectionNode(Node):
 
         # Internal variables
         self.active = True 
-        self.coord = [2, -0.0]
+        self.coord = [
+            [5.5, 2.5],
+            [1.0,0.0],
+            [1.5, 2.5]
+        ]
+        
+        [1.0, 0.0]
 
     def timer_callback(self):
 
@@ -51,12 +57,14 @@ class DummyObjectDetectionNode(Node):
             self.detection_publisher.publish(msg)
             self.get_logger().info("Object Detected") # Publishing object detection flag.
 
+            random_choice = random.randint(0,2)
+
             # Converting target coordinates to stamped pose message. 
             pose = PoseStamped()
             pose.header.frame_id = 'map'
             pose.header.stamp = self.get_clock().now().to_msg()
-            pose.pose.position.x = float(self.coord[0])
-            pose.pose.position.y = float(self.coord[1])
+            pose.pose.position.x = float(self.coord[random_choice][0])
+            pose.pose.position.y = float(self.coord[random_choice][1])
             pose.pose.orientation.w = 1.0
             self.coords_publisher.publish(pose)
 

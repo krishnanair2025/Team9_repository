@@ -4,6 +4,7 @@
 # Terminal command to launch rover in gazebo with task manager active
 # ros2 launch leo_gz_bringup task_manager.launch.py | grep task_manager
 
+# Imports 
 import rclpy 
 from rclpy.node import Node
 from std_msgs.msg import Bool
@@ -11,11 +12,27 @@ from example_interfaces.srv import SetBool, Trigger
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 
+"""
+Logic:
+
+This task manager node acts as the main orchestrator for the rover's mission. It is activated using a trigger service
+call which acts like a way of switching on the rover at the start of the mission. When activated, the task manager 
+switches from IDLE to EXPLORE state. When entering explore state, it calls the service in the frontier exploration node.
+If a detection flag is published by the object detection node, exploration is stopped and task manager enters APPROACH 
+state. The task manager calls the service in the approach object node which sends the rover to the most ideal approach
+point near the target object's coordinates. Currently, the task manager simulates the time taken to pick the object using
+a 30 second timer before switching to explore state again but only if the number of objects collected is less than 3. 
+If all three objects have been collected, the task manager calls the service in the move_to_coords node which sends
+the rover back to the starting point for sorting. 
+
+"""
+
 class TaskManagerNode(Node):
 
-    """ ROS2 Node that acts as a task manager and orchestrates the overall behaviour of the rover
-    during its mission to pick and retrieve coloured objects from a search area """
-
+    """
+    ROS2 Node that orchestrates the overall behaviour of the rover during its mission to pick and retrieve 
+    coloured objects from a search area 
+    """
 
     def __init__(self):
         super().__init__('task_manager_node')
@@ -28,7 +45,7 @@ class TaskManagerNode(Node):
         self.starty = 1.0
         self.startw = 1.0
 
-        # Initialising service server to receive trigger call from terminal to start rover
+        # Service server to receive trigger call from terminal to start rover
         self.activate_rover = self.create_service(
             Trigger,
             '/trigger_rover',
@@ -38,7 +55,7 @@ class TaskManagerNode(Node):
         # Subscriber to check whether move_to_coord node has succesfully moved rover to object
         self.reached_sub = self.create_subscription(
             Bool,
-            '/reached_object',
+            '/approach_success',
             self.reached_object_callback,
             10
         )
@@ -76,6 +93,17 @@ class TaskManagerNode(Node):
 
         while not self.move_to_coord_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("Waiting for /move_to_coord status service...")
+
+        # Service client to call approach_obj service
+        self.approach_object_client = self.create_client(
+            Trigger,
+            '/approach_object',
+        )
+
+        while not self.approach_object_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("Waiting for approach object service...")
+
+
 
 
     # Callback function for trigger service call from terminal to start rover
@@ -121,7 +149,7 @@ class TaskManagerNode(Node):
 
                 self.state = "APPROACH_OBJECT"
                 self.get_logger().info(f"Robot in {self.state} state")
-                self.move_rover_to_coords()
+                self.approach_object()
 
 
     # Method to pause exploration by calling frontier exploration node
@@ -150,20 +178,38 @@ class TaskManagerNode(Node):
         x = msg.pose.position.x
         y = msg.pose.position.y
         w = msg.pose.orientation.w  
-        self.get_logger().info(f"Object location -> x: {x}, y: {y}, w: {w}")
 
+        
+    """ This method can be used later to send rover to starting point
 
     # Method to trigger move_to_coord service 
     def move_rover_to_coords(self):
 
-        """ Makes a service call to move_to_coord node to move the rover to coordinates 
-        published by object detection node """
+         Makes a service call to move_to_coord node to move the rover to coordinates 
+        published by object detection node 
 
         req = SetBool.Request()
         req.data = True
 
         future = self.move_to_coord_client.call_async(req)
-        future.add_done_callback(self.service_response)     
+        future.add_done_callback(self.service_response)    
+
+    """
+
+    def approach_object(self):
+        req = Trigger.Request()
+
+        future = self.approach_object_client.call_async(req)
+        future.add_done_callback(self.approach_response)  
+
+    def approach_response(self,future):
+        try:
+            resp = future.result()
+            self.get_logger().info(f"Successfully triggered approach object server, message: {resp}")
+
+        except Exception as e:
+            self.get_logger().info("Failed to trigger approach object server")
+
 
     # Callback to check whether move_to_coord has succesfully moved rover to target location
     def reached_object_callback(self,msg):
@@ -176,6 +222,7 @@ class TaskManagerNode(Node):
                 self.get_logger().info("Rover has reached the object")
                 self.object_count = self.object_count+1 # Incrementing number of objects picked
                 self.picking_time()
+
 
     # Simulating time taken for rover to pick object
     def picking_time(self):

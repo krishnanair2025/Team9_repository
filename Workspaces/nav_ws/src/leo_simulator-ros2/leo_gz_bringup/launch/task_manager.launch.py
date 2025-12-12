@@ -92,6 +92,12 @@ def generate_launch_description():
         output = 'screen'
     )
 
+    approach_object = Node(
+        package = 'approach_obj_pkg',
+        executable = 'approach_obj_node',
+        output = 'screen'
+    )
+
     move_to_coord = Node(
         package = 'move_to_coord_pkg',
         executable = 'move_to_coord_node',
@@ -119,6 +125,7 @@ def generate_launch_description():
         frontier_exploration,
         dummy_object_detection,
         task_manager,
+        approach_object,
         move_to_coord,
         rviz_node
     ])
