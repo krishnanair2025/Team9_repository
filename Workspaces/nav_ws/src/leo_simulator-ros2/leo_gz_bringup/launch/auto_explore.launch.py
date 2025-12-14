@@ -80,6 +80,13 @@ def generate_launch_description():
         output = 'screen'
     )
 
+        # Custom frontier exploration node
+    obj_detect = Node(
+        package = 'colour_detect_pkg',
+        executable = 'colour_detect_node',
+        output = 'screen'
+    )
+
     # --- RViz2 with your custom config ---
     rviz_config_path = os.path.expanduser('~/Team9_repository/Workspaces/nav_ws/src/config/leo_nav_mapping.rviz')
     rviz_node = Node(
@@ -99,5 +106,6 @@ def generate_launch_description():
         slam_launch,
         nav2_launch,
         frontier_exploration,
+        obj_detect,
         rviz_node
     ])

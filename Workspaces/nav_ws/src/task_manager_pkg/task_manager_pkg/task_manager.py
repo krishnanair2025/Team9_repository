@@ -1,5 +1,5 @@
 # Terminal command to start rover
-# ros2 service call /trigger_rover example_interfaces/srv/Trigger "{}"
+# ros2 service call /trigger_rover example_interfaces/srv/Trigger "{}" 
 
 # Terminal command to launch rover in gazebo with task manager active
 # ros2 launch leo_gz_bringup task_manager.launch.py | grep task_manager
@@ -9,8 +9,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from example_interfaces.srv import SetBool, Trigger
-from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped 
+import time
 
 """
 Logic:
@@ -37,22 +37,47 @@ class TaskManagerNode(Node):
     def __init__(self):
         super().__init__('task_manager_node')
 
-        # Internal variables
-        self.state = "IDLE"
-        self.get_logger().info(f"Robot in {self.state} state")
-        self.object_count = 0
-        self.startx = 0.3
-        self.starty = 1.0
-        self.startw = 1.0
+        ########## SERVICE SERVER ##########
 
-        # Service server to receive trigger call from terminal to start rover
+        # For trigger call from terminal to start robot
         self.activate_rover = self.create_service(
             Trigger,
             '/trigger_rover',
-            self.trigger_callback,
+            self.trigger_mission_callback,
         )
 
-        # Subscriber to check whether move_to_coord node has succesfully moved rover to object
+
+        ########## SERVICE CLIENTS ##########
+
+        # To start/pause frontier exploration
+        self.exploration_client = self.create_client(
+            SetBool,
+            '/explore_status',
+        )
+
+        # To start approach_obj service
+        self.approach_object_client = self.create_client(
+            Trigger,
+            '/approach_object',
+        )
+
+        # To call backup service
+        self.backup_client = self.create_client(
+            Trigger,
+            '/backup',
+        )
+
+        
+        # Service client to call move_to_coord node with request to move rover to target coordinates
+        self.move_to_coord_client = self.create_client(
+            SetBool,
+            '/move_to_coord',
+        )
+
+
+        ########## SUBSCRIBERS ##########
+
+        # To check whether move_to_coord node has succesfully moved rover to coordinates
         self.reached_sub = self.create_subscription(
             Bool,
             '/approach_success',
@@ -60,205 +85,231 @@ class TaskManagerNode(Node):
             10
         )
         
-        # Subscriber to monitor whether object detection node has detected a coloured object
-        self.detection_subscription = self.create_subscription(
+        # To monitor whether object detection node has detected a coloured object
+        self.detection_sub = self.create_subscription(
             Bool,
             'detected_flag',
             self.callback_detected,
             10
         )
 
-        # Subscriber to monitor location of the object detected by the object detection node
-        self.object_location_subscription = self.create_subscription(
-            PoseStamped,
-            'object_location',
-            self.object_location_callback,
+        # To monitor backup success 
+        self.backup_success_sub = self.create_subscription(
+            Bool,
+            'backup_success',
+            self.backup_success_callback,
             10
         )
 
-        # Service client to call frontier exploration node with request to start or pause exploring
-        self.exploration_client = self.create_client(
-            SetBool,
-            '/explore_status',
-        )
+        ########## INTERNAL VARIABLES ##########
+        self.state = "IDLE"
+        self.get_logger().info(f"Robot in {self.state}")
+        self.object_count = 0
 
-        while not self.exploration_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("Waiting for /explore status service...")
+        self.mission_active = False
+        self.object_seen = False
+        self.explorer_active = False
+        self.approaching = False
+        self.approach_success = False
+        self.arm_active = False
+        self.backing_up = False
 
-        # Service client to call move_to_coord node with request to move rover to target coordinates
-        self.move_to_coord_client = self.create_client(
-            SetBool,
-            '/move_to_coord',
-        )
+        # Timer for main mission loop
+        self.mission_timer = self.create_timer(0.1,self.mission_state)
 
-        while not self.move_to_coord_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("Waiting for /move_to_coord status service...")
+    #################### MAIN STATE MACHINE LOOP ####################
 
-        # Service client to call approach_obj service
-        self.approach_object_client = self.create_client(
-            Trigger,
-            '/approach_object',
-        )
-
-        while not self.approach_object_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("Waiting for approach object service...")
-
-
-
-    # Callback function for trigger service call from terminal to start rover
-    def trigger_callback(self, request, response):
-
-        """ If the trigger service call is made while the rover is in IDLE state, the 
-        rover is switched to EXPLORE state and a service call is made to frontier_exploration
-        node to start exploration """
-
+    def mission_state(self):
+        if not self.mission_active:
+            self.switch_state("IDLE")
+            return
+        
         if self.state == "IDLE":
-            self.get_logger().info("Exploration triggered -> Starting exploration ... ")
+            self.execute_idle()
 
-            req = SetBool.Request()
-            req.data = True
+        elif self.state == "EXPLORE":
+            self.execute_explore()
 
-            future = self.exploration_client.call_async(req)
-            future.add_done_callback(self.service_response)
+        elif self.state == "APPROACH":
+            self.execute_approach()
 
-            response.success = True
-            response.message = "Exploration start command sent."
+        elif self.state == "PICKUP":
+            self.execute_pickup()
+        
+        elif self.state == "BACKING_UP":
+            self.execute_backup()
 
-            self.state = "EXPLORING"
-            self.get_logger().info(f"Robot in {self.state} state")
+        elif self.state == "RETURN_TO_START":
+            self.execute_return()
 
-        else:
+    #################### STATE EXECUTE FUNCTIONS ####################
+
+    def execute_idle(self):
+        self.get_logger().info(f"Robot idle")
+
+    def execute_explore(self):
+
+        if not self.exploration_client.service_is_ready():
+            self.get_logger().warn("Exploration service not ready yet")
+            return
+
+        if not self.explorer_active:
+            # Activating frontier exploration service
+            explore_req = SetBool.Request()
+            explore_req.data = True
+
+            future = self.exploration_client.call_async(explore_req)
+            future.add_done_callback(self.exploration_response)
+            self.get_logger().info("Exploration start request sent...")
+
+            self.explorer_active = True
+
+    def execute_approach(self):
+
+        if not self.approach_object_client.service_is_ready():
+            self.get_logger().warn("Approach service not ready yet")
+            return
+        
+        if self.explorer_active:
+            # Deactivating frontier exploration service
+            explore_req = SetBool.Request()
+            explore_req.data = False
+
+            future = self.exploration_client.call_async(explore_req)
+            future.add_done_callback(self.exploration_response)
+            self.get_logger().info("Exploration pause request sent...")
+
+            self.explorer_active = False
+
+        time.sleep(1)
+
+        if not self.approaching:
+            # Triggering approach service
+            approach_req = Trigger.Request()
+
+            future = self.approach_object_client.call_async(approach_req)
+            future.add_done_callback(self.approach_trigger_response)
+            self.approaching = True
+
+    def execute_pickup(self):
+        if not self.arm_active:
+            self.get_logger().info("Simulating manipulator task (30s)")
+            time.sleep(30.0)
+            self.switch_state("BACKING_UP")
+            self.get_logger().info(f"Picked object, number of objects stored: {self.object_count}")
+
+    def execute_backup(self):
+        if not self.backing_up:
+            backup_req = Trigger.Request()
+
+            future = self.backup_client.call_async(backup_req)
+            future.add_done_callback(self.backup_trigger_response)
+            self.backing_up = True
+
+    def execute_return(self):
+        self.get_logger().info("RETURNING TO START")
+
+    #################### SERVICE RESPONSES ####################
+
+    def exploration_response(self,future):
+        try: 
+            explore_response = future.result()
+
+            if explore_response.success:
+                self.get_logger().info(explore_response.message)
+            else:
+                self.get_logger().info(explore_response.message)
+
+        except Exception as e:
+            self.get_logger().error(f"Explorer service call failed: {e}")
+
+    def approach_trigger_response(self,future):
+        try:
+            approach_response = future.result()
+
+            if approach_response.success:
+                self.get_logger().info(approach_response.message)
+            else:
+                self.get_logger().info(approach_response.message)
+        
+        except Exception as e:
+            self.get_logger().error(f"Approach service call failed: {e}")
+
+    def backup_trigger_response(self,future):
+        try:
+            backup_response = future.result()
+
+            if backup_response.success:
+                self.get_logger().info(backup_response.message)
+            else:
+                self.get_logger().info(backup_response.message)
+        
+        except Exception as e:
+            self.get_logger().error(f"Approach service call failed: {e}")
+
+
+    #################### CALLBACK FUNCTIONS ####################
+
+    # Function to change state 
+    def switch_state(self, new_state):
+        if self.state != new_state:
+            self.get_logger().info(f"State change: {self.state} -> {new_state}")
+            self.state = new_state
+
+    # Callback function for triggering mission 
+    def trigger_mission_callback(self,request,response):
+
+        """ 
+        This actives the task manager.
+        """        
+
+        # No action if mission is already running
+        if self.mission_active:
             response.success = False
-            response.message = "Exploration already running."
+            response.message = "Mission already active"
+            self.get_logger().warn(response.message)
+
+            return response
+        
+        # Enable mission if not active
+        self.mission_active = True
+
+        # Switch state 
+        self.switch_state("EXPLORE")
+
+        response.success = True
+        response.message = "Mission started"
+        self.get_logger().info(response.message)
 
         return response
 
-
-    # Callback function for detection flagged by objection detection node
-    def callback_detected(self,msg):
-
-        """ When the object detection node flags that a coloured object has been detected, 
-        if the rover is in EXPLORE mode, it is switched to "APPROACH_OBJECT" mode, two other 
-        methods are called to pause exploration and to move rover to target coords"""
-
-        if self.state == "EXPLORING":
-            if msg.data == True:
-                self.get_logger().info("Detection received! Sending explorer pause command...")
-                self.pause_exploration()
-
-                self.state = "APPROACH_OBJECT"
-                self.get_logger().info(f"Robot in {self.state} state")
-                self.approach_object()
-
-
-    # Method to pause exploration by calling frontier exploration node
-    def pause_exploration(self):
-
-        """ Makes a service call to frontier exploration node to pause exploration """
-
-        req = SetBool.Request()
-        req.data = False
-
-        future = self.exploration_client.call_async(req)
-        future.add_done_callback(self.service_response)
-
-
-    # Method to check response of frontier_exploration node
-    def service_response(self,future):
-        try:
-            response = future.result()
-            self.get_logger().info(f"/explorer responded: success={response.success}")
-        except Exception as e:
-            self.get_logger().error(f"Service call failed: {e}")
-
-
-    # Method to retrieve object coordinates published by object detection node
-    def object_location_callback(self, msg: PoseStamped):
-        x = msg.pose.position.x
-        y = msg.pose.position.y
-        w = msg.pose.orientation.w  
-
-        
-    """ This method can be used later to send rover to starting point
-
-    # Method to trigger move_to_coord service 
-    def move_rover_to_coords(self):
-
-         Makes a service call to move_to_coord node to move the rover to coordinates 
-        published by object detection node 
-
-        req = SetBool.Request()
-        req.data = True
-
-        future = self.move_to_coord_client.call_async(req)
-        future.add_done_callback(self.service_response)    
-
-    """
-
-    def approach_object(self):
-        req = Trigger.Request()
-
-        future = self.approach_object_client.call_async(req)
-        future.add_done_callback(self.approach_response)  
-
-    def approach_response(self,future):
-        try:
-            resp = future.result()
-            self.get_logger().info(f"Successfully triggered approach object server, message: {resp}")
-
-        except Exception as e:
-            self.get_logger().info("Failed to trigger approach object server")
-
-
-    # Callback to check whether move_to_coord has succesfully moved rover to target location
     def reached_object_callback(self,msg):
+        self.approaching = False
+        if msg.data == True:
+            self.get_logger().info("Rover has reached the object")
+            self.object_count = self.object_count + 1
+            self.switch_state("PICKUP")
 
-        """ Checks if move_to_coord node has published that the rover has succesfully moved
-        to the target coordiantes """
+        else:
+            self.get_logger().info("Approach object service failed")
+            self.switch_state("EXPLORE")
+    
+    def callback_detected(self,msg):
+        if self.state == "EXPLORE":
+            if msg.data:
+                self.get_logger().info("Object detected! Stopping explorer and requesting approach")
+                self.switch_state("APPROACH")
 
-        if self.state == "APPROACH_OBJECT":
-            if msg.data == True:
-                self.get_logger().info("Rover has reached the object")
-                self.object_count = self.object_count+1 # Incrementing number of objects picked
-                self.picking_time()
-
-
-    # Simulating time taken for rover to pick object
-    def picking_time(self):
-
-        """ Simulates the time taken for the manipulator to pick and place the object in the 
-        onboard storage bin using a 30s timer """
-
-        self.pick_timer = self.create_timer(30.0,self.continue_exploration)
-        self.get_logger().info("Simulating object picking time")
-        self.state = "PICKING"
-        self.get_logger().info(f"Robot in {self.state} state")
-
-    # Method to continue frontier exploration 
-    def continue_exploration(self):
-
-        """ Checks if the number of objects collected is 3, if it is 3, the rover stops. 
-        If less than 3, the rover makes a call to frontier exploration to continue exploration """
-
-        self.get_logger().info(f"Rover has collected {self.object_count} objects.")
-
-        self.pick_timer.cancel()
-
-        if self.object_count >= 3:
-            self.state = "RETURNING TO START"
-            self.get_logger().info("Rover has collected all three objects")
-            self.get_logger().info(f"Robot in {self.state} state")
-
-            return
-
-        if self.state != "EXPLORING":
-            req = SetBool.Request()
-            req.data = True
-
-            future = self.exploration_client.call_async(req)
-            future.add_done_callback(self.service_response)
-            self.state = "EXPLORING"
-            self.get_logger().info(f"Robot in {self.state} state")
+    def backup_success_callback(self,msg):
+        self.backing_up = False
+        if msg.data:
+            self.get_logger().info("Rover backed up to sufficient distance from object pedestal")
+            if self.object_count == 3:
+                self.get_logger().info(f"Rover collected all {self.object_count} objects, returning to start.")
+                self.switch_state("RETURN_TO_START")
+            else:
+                self.get_logger().info("Continuing exploration")
+                self.switch_state("EXPLORE")
 
 
 

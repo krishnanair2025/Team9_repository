@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from tf2_ros import Buffer, TransformListener
 from nav_msgs.msg import OccupancyGrid
 from example_interfaces.srv import SetBool, Trigger
@@ -40,9 +40,25 @@ class ApproachObjNode(Node):
             10
         )
 
+        # Subscriber to pose of object in camera's frame
+        self.pose_pub = self.create_subscription(
+            PoseStamped,
+            'cam_obj_loc',
+            self.pose_callback,
+            10
+        )
+
+        # Publisher for approach success
         self.success_pub = self.create_publisher(
             Bool,
             '/approach_success',
+            10
+        )
+
+        # Publisher for command velocity
+        self.velocity_pub = self.create_publisher(
+            Twist,
+            'cmd_vel',
             10
         )
 
@@ -50,7 +66,11 @@ class ApproachObjNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.create_timer(0.1, self.robot_pose_callback)  # 10 Hz
 
+        self.x = None
+        self.distance = None
+        self.refining = None
 
+        self.retry_count = 0
 
         self.c_box = None # Coordinate of the target object, to be filled in when pose is received
         self.box_dim = 205/1000
@@ -65,7 +85,6 @@ class ApproachObjNode(Node):
         self.costmap_info = None
 
         self.latest_pose = None
-
         self.candidate_points = []
         self.approach_point = None
         self.heading_angle = None
@@ -86,26 +105,25 @@ class ApproachObjNode(Node):
             response.message = "No coordinates available yet."
             self.get_logger().warn("Cannot start navigation: no object_location received.")
             return response
+            
+        self.main_process()
+
+        response.success = True
+        response.message = "Approach request received and goal sent"
+
+        return response
+    
+    def main_process(self):
         
         self.candidate_points = [] # clearing old candidate points
         
         self.find_candidate_points(self.latest_pose) # calling function to find new candidate points
 
         self.approach_point_picker()
-
-        if self.approach_point is None:
-            response.success = False
-            response.message = "No safe points found"
-            return response
         
         approach_pose = self.point_to_pose()
         
         self.send_goal(approach_pose)
-
-        response.success = True
-        response.message = "Approach request received and goal sent"
-
-        return response
     
 
     # Store latest object coordinates
@@ -180,7 +198,7 @@ class ApproachObjNode(Node):
 
             footprint_mask = self.costmap_data[gy_start:gy_end+1, gx_start:gx_end+1]
 
-            if np.all(footprint_mask < 100):
+            if np.all((footprint_mask < 100) | (footprint_mask == 255)):
                 safe_points.append(point)
 
         if not safe_points:
@@ -197,8 +215,10 @@ class ApproachObjNode(Node):
             distance_to_coord = np.sqrt((abs(coords[0]-rover_cells_x))**2 + (abs(coords[1]-rover_cells_y))**2)
             distances.append(distance_to_coord)
 
+        self.get_logger().info(f"Distances list = {distances}")
 
         approach_point = safe_points[distances.index(min(distances))] # picking the point in the middle out of all the safe points
+        self.get_logger().info(f"Distance to chosen point = {min(distances)}")
 
         wx_approach = origin.x + approach_point[0] * res
         wy_approach = origin.y + approach_point[1] * res
@@ -270,30 +290,90 @@ class ApproachObjNode(Node):
         status = future.result().status
 
         if status == 4:  # SUCCEEDED
-            self.get_logger().info("Rover successfully reached the approach point!")
+            self.get_logger().info("Rover successfully reached the approach point! Starting refinement")
+            self.align_timer = self.create_timer(0.05, self.align_object)
+
+            self.get_logger().info("Refinement complete, rover in position for pickup")
+
             msg = Bool()
             msg.data = True
             self.success_pub.publish(msg)
 
         elif status == 5:  # CANCELED
-            self.get_logger().warn("Goal was cancelled.")
+            self.get_logger().warn("Goal was cancelled. Trying again")
+            self.retry_count = self.retry_count+1
+            if self.retry_count < 3:
+                self.main_process()
+            
             msg = Bool()
             msg.data = False
             self.success_pub.publish(msg)
 
         elif status == 6:  # ABORTED
-            self.get_logger().error("Nav2 aborted the goal.")
+            self.get_logger().error("Nav2 aborted the goal. Trying again")
+            self.retry_count = self.retry_count+1
+            if self.retry_count < 3:
+                self.main_process()
+
             msg = Bool()
             msg.data = False
             self.success_pub.publish(msg)
+                
+        else:
+            self.get_logger().error(f"Unknown Nav2 result status: {status}. Trying again")
+            self.retry_count = self.retry_count+1
+            if self.retry_count < 3:
+                self.main_process()
+
+            msg = Bool()
+            msg.data = False
+            self.success_pub.publish(msg)
+
+
+    def pose_callback(self, msg: PoseStamped):
+        self.x = msg.pose.position.x
+        self.distance = msg.pose.position.z
+
+
+    def align_object(self):
+
+        if self.x is None:
+            return
+
+        twist = Twist()
+        twist.angular.z = 0.0
+
+        if abs(self.x) > 0.02:
+            twist.angular.z = 0.1 if self.x < 0 else -0.1
+            self.get_logger().info(f"Rotating {'left' if self.x < 0 else 'right'}")
+            self.velocity_pub.publish(twist)
+        else:
+            self.get_logger().info("Object centered")
+            twist.angular.z = 0.0
+            self.velocity_pub.publish(twist)
+            self.move_to_obj_timer = self.create_timer(0.05,self.move_to_obj)
+            self.align_timer.cancel()
+            #self.refining = False  # stop further rotation
+
+    def move_to_obj(self):
+        if self.distance is None:
+            return
+        
+        twist = Twist()
+
+        if self.distance > 0.2:
+            twist.linear.x = 0.1
+            self.velocity_pub.publish(twist)
+            self.get_logger().info(f"Moving closer, current distance = {self.distance}")
 
         else:
-            self.get_logger().error(f"Unknown Nav2 result status: {status}")
-            msg = Bool()
-            msg.data = False
-            self.success_pub.publish(msg)
+            self.get_logger().info("Rover is close to object")
+            twist.linear.x = 0.0
+            self.velocity_pub.publish(twist)
+            self.move_to_obj_timer.cancel()
 
-
+            
+        
 
 
 

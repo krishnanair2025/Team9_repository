@@ -80,6 +80,13 @@ def generate_launch_description():
         output = 'screen'
     )
 
+    # Custom frontier exploration node
+    obj_detect = Node(
+        package = 'colour_detect_pkg',
+        executable = 'colour_detect_node',
+        output = 'screen'
+    )
+
     dummy_object_detection = Node(
         package = 'dummy_object_detection_pkg',
         executable = 'dummy_object_detection_node',
@@ -115,6 +122,12 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]
     )
 
+    backup_node = Node(
+        package = 'backup_pkg',
+        executable = 'back_up_node',
+        output = 'screen'
+    )
+
     # Build the launch description
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='true'),
@@ -123,9 +136,11 @@ def generate_launch_description():
         slam_launch,
         nav2_launch,
         frontier_exploration,
-        dummy_object_detection,
+        obj_detect,
+        #dummy_object_detection,
         task_manager,
         approach_object,
         move_to_coord,
+        backup_node,
         rviz_node
     ])

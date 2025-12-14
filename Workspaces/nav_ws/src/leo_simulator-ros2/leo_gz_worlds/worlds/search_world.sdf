@@ -108,7 +108,7 @@
 
     <!-- Target object pedestal -->
     <model name='obj_box'>
-      <pose>2 1 0.12 0 0 0</pose>
+      <pose>4.5 1.3 0.12 0 0 0</pose>
       <link name='obj_box_link'>
         <collision name='obj_box_collision'>
           <geometry>
@@ -273,7 +273,7 @@
 
     <!-- target cylinder 1 -->
     <model name='target_cylinder_1'>
-      <pose>2.0 1.0 0.253 0 0 0</pose>
+      <pose>4.5 1.3 0.253 0 0 0</pose>
       <link name='target_cylinder_1_link'>
         <collision name='target_cylinder_1_collision'>
           <geometry>

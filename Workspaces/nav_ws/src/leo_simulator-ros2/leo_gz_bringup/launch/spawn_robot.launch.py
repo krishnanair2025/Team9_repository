@@ -103,6 +103,10 @@ def spawn_robot(context: LaunchContext, namespace: LaunchConfiguration):
             + "/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
             robot_ns + "/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model",
             robot_ns + "/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
+            robot_ns + "/world/empty/model/leo_rover/link/base_footprint/sensor/realsense_rgbd/image@sensor_msgs/msg/Image@gz.msgs.Image",
+            robot_ns + "/world/empty/model/leo_rover/link/base_footprint/sensor/realsense_rgbd/depth_image@sensor_msgs/msg/Image@gz.msgs.Image",
+            robot_ns + "/world/empty/model/leo_rover/link/base_footprint/sensor/realsense_rgbd/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo",
+            robot_ns + "/world/empty/model/leo_rover/link/base_footprint/sensor/realsense_rgbd/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked"
         ],
         parameters=[
             {
@@ -111,6 +115,8 @@ def spawn_robot(context: LaunchContext, namespace: LaunchConfiguration):
         ],
         output="screen",
     )
+
+
 
     # Camera image bridge
     image_bridge = Node(

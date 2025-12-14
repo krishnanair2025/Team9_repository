@@ -89,6 +89,7 @@ class FrontierExplorationNode(Node):
 
         # Status of the exploration service
         self.exploring = False
+        self.spinning = False
 
         # Tracking active goal
         self.goal_active = False
@@ -154,7 +155,7 @@ class FrontierExplorationNode(Node):
 
 
         # Only picks and sends a goal if explorer is active and there is no current goal being pursued.
-        if (self.exploring == True) and (self.goal_active == False):
+        if (self.exploring == True) and (self.goal_active == False) and (self.spinning == False):
 
             self.get_logger().info('Picking new frontier')
 
@@ -373,7 +374,9 @@ class FrontierExplorationNode(Node):
 
     # Function to make rover spin in place
     def spin_in_place (self,angular_speed = 0.5, duration = 5.0):
-
+        self.get_logger().info("Start spinning")
+        self.spinning = True
+        
         """
         This function prepares and publishes a Twist type message to make the rover spin on the spot,
         if the explorer is paused while spinning or if the duration is met, a 0 angular velocity command is 
@@ -398,6 +401,7 @@ class FrontierExplorationNode(Node):
         # Stop spinning
         twist.angular.z = 0.0
         self.spin_pub.publish(twist)
+        self.spinning = False
         self.get_logger().info("Spin completed!")
 
 

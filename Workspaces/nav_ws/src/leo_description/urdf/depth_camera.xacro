@@ -48,11 +48,9 @@
   <gazebo reference="realsense_link">
 
     <sensor name="realsense_rgbd" type="rgbd_camera">
-      <pose>0 0 0.1 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
 
       <update_rate>30</update_rate>
-      <topic>camera/color/image_raw</topic>
-      <depth_topic>camera/depth/image_raw</depth_topic>
 
       <camera>
         <horizontal_fov>1.5</horizontal_fov>  <!-- approx D435i FOV -->
