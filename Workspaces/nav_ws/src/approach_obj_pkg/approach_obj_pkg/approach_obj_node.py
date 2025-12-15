@@ -89,6 +89,11 @@ class ApproachObjNode(Node):
         self.approach_point = None
         self.heading_angle = None
 
+        self.active = False
+        self.refinement_done = False
+
+
+
     # Callback for accessing the costmap
     def costmap_callback(self, msg):
         # Extracting map information
@@ -105,13 +110,16 @@ class ApproachObjNode(Node):
             response.message = "No coordinates available yet."
             self.get_logger().warn("Cannot start navigation: no object_location received.")
             return response
-            
-        self.main_process()
+        
+        self.active = True
 
-        response.success = True
-        response.message = "Approach request received and goal sent"
+        if self.active:
+            self.main_process()
 
-        return response
+            response.success = True
+            response.message = "Approach request received and goal sent"
+
+            return response
     
     def main_process(self):
         
@@ -215,10 +223,10 @@ class ApproachObjNode(Node):
             distance_to_coord = np.sqrt((abs(coords[0]-rover_cells_x))**2 + (abs(coords[1]-rover_cells_y))**2)
             distances.append(distance_to_coord)
 
-        self.get_logger().info(f"Distances list = {distances}")
+        #self.get_logger().info(f"Distances list = {distances}")
 
         approach_point = safe_points[distances.index(min(distances))] # picking the point in the middle out of all the safe points
-        self.get_logger().info(f"Distance to chosen point = {min(distances)}")
+        #self.get_logger().info(f"Distance to chosen point = {min(distances)}")
 
         wx_approach = origin.x + approach_point[0] * res
         wy_approach = origin.y + approach_point[1] * res
@@ -238,9 +246,9 @@ class ApproachObjNode(Node):
         pose.pose.orientation.z = math.sin(yaw/2.0)
         pose.pose.orientation.w = math.cos(yaw/2.0)
 
-        self.get_logger().info(f"x = {self.approach_point[0]}")
-        self.get_logger().info(f"y = {self.approach_point[1]}")
-        self.get_logger().info(f"heading = {math.degrees(self.heading_angle)} degrees")
+        #self.get_logger().info(f"x = {self.approach_point[0]}")
+        #self.get_logger().info(f"y = {self.approach_point[1]}")
+        #self.get_logger().info(f"heading = {math.degrees(self.heading_angle)} degrees")
         return pose
 
     def send_goal(self, pose: PoseStamped):
@@ -295,19 +303,17 @@ class ApproachObjNode(Node):
 
             self.get_logger().info("Refinement complete, rover in position for pickup")
 
-            msg = Bool()
-            msg.data = True
-            self.success_pub.publish(msg)
-
         elif status == 5:  # CANCELED
             self.get_logger().warn("Goal was cancelled. Trying again")
             self.retry_count = self.retry_count+1
             if self.retry_count < 3:
                 self.main_process()
             
+            
             msg = Bool()
             msg.data = False
             self.success_pub.publish(msg)
+            self.active = False
 
         elif status == 6:  # ABORTED
             self.get_logger().error("Nav2 aborted the goal. Trying again")
@@ -318,6 +324,7 @@ class ApproachObjNode(Node):
             msg = Bool()
             msg.data = False
             self.success_pub.publish(msg)
+            self.active = False
                 
         else:
             self.get_logger().error(f"Unknown Nav2 result status: {status}. Trying again")
@@ -328,6 +335,7 @@ class ApproachObjNode(Node):
             msg = Bool()
             msg.data = False
             self.success_pub.publish(msg)
+            self.active = False
 
 
     def pose_callback(self, msg: PoseStamped):
@@ -371,10 +379,13 @@ class ApproachObjNode(Node):
             twist.linear.x = 0.0
             self.velocity_pub.publish(twist)
             self.move_to_obj_timer.cancel()
-
             
-        
-
+            # Pubishing success message to task manager
+            self.get_logger().info("Rover in position for pickup")
+            msg = Bool()
+            msg.data = True
+            self.success_pub.publish(msg)
+            self.active = False
 
 
 def main(args = None):

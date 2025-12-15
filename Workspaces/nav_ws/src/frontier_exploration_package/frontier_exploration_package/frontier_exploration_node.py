@@ -94,9 +94,6 @@ class FrontierExplorationNode(Node):
         # Tracking active goal
         self.goal_active = False
 
-
-
-
     # Callback for request from task manager to start/stop exploration service 
     def exploration_server_callback(self, request, response):
 
@@ -107,6 +104,7 @@ class FrontierExplorationNode(Node):
 
         self.exploring = request.data
         response.success = True
+        self.get_logger().info(f"Goal state = {self.goal_active}")
 
         if self.exploring == True:
             response.message = f"Explorer running"
@@ -122,9 +120,6 @@ class FrontierExplorationNode(Node):
 
         return response
 
-
-
-
     # Callback for the costmap subscriber
     def costmap_callback(self, msg):
 
@@ -136,9 +131,6 @@ class FrontierExplorationNode(Node):
         self.costmap_info = msg.info
         data = np.array(msg.data, dtype=np.int8)
         self.costmap_data = data.reshape((msg.info.height, msg.info.width))
-
-
-
 
     # Callback for accessing the occupancy grid as well as calling the pick frontier and send goal method
     def map_callback(self, msg):
@@ -166,10 +158,12 @@ class FrontierExplorationNode(Node):
             if frontier is not None:
                 # calling send_goal function with the chosen frontier as argument
                 pose = self.frontier_to_pose(frontier)
+                self.send_goal(pose)  
+            else:
+                self.get_logger().info("Frontiers unavailable, picking free cell...")
+                free_cell = self.free_cell_picker()
+                pose = self.frontier_to_pose(free_cell)
                 self.send_goal(pose)
-
-
-
 
     # Method to pick frontier from the occupancy grid
     def pick_frontier(self):
@@ -181,7 +175,7 @@ class FrontierExplorationNode(Node):
         # Skip if map is not available
         if self.map_data is None:
             return None
-        
+
         # Skip if costmap is not available
         if self.costmap_data is None:
             return None
@@ -219,7 +213,6 @@ class FrontierExplorationNode(Node):
         # Checking whether no frontiers are found
         if len(points) == 0:
             self.get_logger().info('No frontiers found')
-            self.exploring = False
             return None
         
         # Initialising list for frontiers where the rover's footprint does not overlap with obstacles or inflation zones on the costmap
@@ -251,15 +244,78 @@ class FrontierExplorationNode(Node):
         # Checking if there are no suitable frontiers
         if len(safe_frontiers)==0:
             self.get_logger().info('No safe frontiers found')
-            self.exploring = False
             return None
 
         # Randomly picking one frontier from the safe frontiers list
         idx = np.random.choice(len(safe_frontiers))
         return safe_frontiers[idx]
+    
+    # Method to pick free cell when frontiers are not available
+    def free_cell_picker(self):
 
+        # Skip if map is not available
+        if self.map_data is None:
+            return None
 
+        # Skip if costmap is not available
+        if self.costmap_data is None:
+            return None
 
+        # Identify free cells (boolean mask)
+        free = (self.map_data == 0)
+
+        # Get indices of free cells
+        free_cells = np.column_stack(np.where(free))
+
+        # Rover's width and length including additional 50mm buffer
+        rover_width = (448 / 1000) + 0.1
+        rover_length = (425 / 1000) + 0.1
+
+        # Calculating rover's dimensions w.r.t map's cells
+        res = self.costmap_info.resolution
+        rover_width_cells = int(np.ceil(rover_width / res))
+        rover_length_cells = int(np.ceil(rover_length / res))
+
+        # Checking whether no free cells are found
+        if len(free_cells) == 0:
+            self.get_logger().info('No free cells found')
+            return None
+
+        # Initialising list for safe free cells
+        safe_free_cells = []
+
+        height, width = self.costmap_data.shape
+
+        # Iterating through all free cells to identify safe ones
+        for candidate in free_cells:
+            y, x = candidate
+
+            # Extracting coordinates of the bounding box of the rover footprint
+            x_start = int(x - rover_width_cells / 2)
+            x_end   = int(x + rover_width_cells / 2)
+            y_start = int(y - rover_length_cells / 2)
+            y_end   = int(y + rover_length_cells / 2)
+
+            # Skip if footprint goes outside map
+            if x_start < 0 or y_start < 0 or x_end >= width or y_end >= height:
+                continue
+
+            # Extract footprint area from costmap
+            footprint_mask = self.costmap_data[y_start:y_end + 1, x_start:x_end + 1]
+
+            # Check footprint is fully free (no obstacles or inflation)
+            if np.all(footprint_mask == 0):
+                safe_free_cells.append(candidate)
+
+        # Checking if there are no suitable free cells
+        if len(safe_free_cells) == 0:
+            self.get_logger().info('No safe free cells found')
+            return None
+
+        # Randomly pick one safe free cell
+        self.get_logger().info("Free cell found, sending goal...")
+        idx = np.random.choice(len(safe_free_cells))
+        return safe_free_cells[idx]
 
     # Method which converts chosen frontier index to a pose for nav2
     def frontier_to_pose(self,cell):
@@ -287,9 +343,6 @@ class FrontierExplorationNode(Node):
         self.get_logger().info(f"y = {wy}")
         return pose
 
-
-
-
     # Method used to send goal to nav2's action server
     def send_goal(self, pose):
 
@@ -306,9 +359,6 @@ class FrontierExplorationNode(Node):
 
         # Marked as currently pursuing a goal
         self.goal_active = True 
-
-
-
 
     # callback for nav2 action server's response
     def goal_response_callback(self, future):
@@ -330,9 +380,6 @@ class FrontierExplorationNode(Node):
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
 
-
-
-
     # callback for nav2 action server's result
     def get_result_callback(self, future):
 
@@ -343,14 +390,20 @@ class FrontierExplorationNode(Node):
         """
 
         result = future.result().result
-        self.goal_active = False
+        
 
         # If succcessful, calls function to spin rover
-        if future.result().status == 4:
-            self.spin_in_place(angular_speed=1.0, duration=5.0)
+        if future.result().status == 4: #Success
+            self.get_logger().info("Success")
+            #self.spin_in_place(angular_speed=0.25, duration=30)
+            self.goal_active = False
 
-
-
+        elif future.result().status == 5: #Cancelled
+                self.get_logger().warn("Navigation CANCELED: goal was cancelled (likely state change).")
+        elif future.result().status == 6: #Aborted 
+                self.get_logger().info("Navigation aborted")
+        else:
+            self.get_logger().error("Navigation returned UNKNOWN status code")
 
     # callback for cancelling a goal
     def cancel_done_callback(self, future):
@@ -368,12 +421,10 @@ class FrontierExplorationNode(Node):
         
         # Clear the goal handle after cancelling
         self._current_goal_handle = None
-
-
-
+        self.goal_active = False
 
     # Function to make rover spin in place
-    def spin_in_place (self,angular_speed = 0.5, duration = 5.0):
+    def spin_in_place (self,angular_speed = 0.25, duration = 30):
         self.get_logger().info("Start spinning")
         self.spinning = True
         
@@ -403,8 +454,6 @@ class FrontierExplorationNode(Node):
         self.spin_pub.publish(twist)
         self.spinning = False
         self.get_logger().info("Spin completed!")
-
-
 
 def main(args = None):
     try: 

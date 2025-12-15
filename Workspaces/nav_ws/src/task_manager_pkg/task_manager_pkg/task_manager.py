@@ -103,9 +103,10 @@ class TaskManagerNode(Node):
 
         ########## INTERNAL VARIABLES ##########
         self.state = "IDLE"
-        self.get_logger().info(f"Robot in {self.state}")
-        self.object_count = 0
+        self.get_logger().info(f"Robot in {self.state} state")
+        self.object_count = 0 #replace with array of colours in order collected
 
+        # Status variables
         self.mission_active = False
         self.object_seen = False
         self.explorer_active = False
@@ -113,6 +114,11 @@ class TaskManagerNode(Node):
         self.approach_success = False
         self.arm_active = False
         self.backing_up = False
+        self.returning = False
+
+        # Mission timing variables
+        self.start_time = None
+        self.end_time = None
 
         # Timer for main mission loop
         self.mission_timer = self.create_timer(0.1,self.mission_state)
@@ -192,14 +198,16 @@ class TaskManagerNode(Node):
             self.approaching = True
 
     def execute_pickup(self):
-        if not self.arm_active:
+        if self.state == "PICKUP":
             self.get_logger().info("Simulating manipulator task (30s)")
             time.sleep(30.0)
+            self.object_count = self.object_count + 1
             self.switch_state("BACKING_UP")
             self.get_logger().info(f"Picked object, number of objects stored: {self.object_count}")
 
     def execute_backup(self):
         if not self.backing_up:
+            self.get_logger().info("Backing up rover")
             backup_req = Trigger.Request()
 
             future = self.backup_client.call_async(backup_req)
@@ -207,7 +215,12 @@ class TaskManagerNode(Node):
             self.backing_up = True
 
     def execute_return(self):
-        self.get_logger().info("RETURNING TO START")
+        if not self.returning:
+            self.get_logger().info("RETURNING TO START")
+            self.end_time = time.time()
+            duration = (self.end_time - self.start_time)/60
+            self.get_logger().info(f"Time till all objects collected: {duration} mins")
+            self.returning = True
 
     #################### SERVICE RESPONSES ####################
 
@@ -274,6 +287,9 @@ class TaskManagerNode(Node):
         # Enable mission if not active
         self.mission_active = True
 
+        # Recording start time
+        self.start_time = time.time()
+
         # Switch state 
         self.switch_state("EXPLORE")
 
@@ -284,15 +300,16 @@ class TaskManagerNode(Node):
         return response
 
     def reached_object_callback(self,msg):
-        self.approaching = False
+        
         if msg.data == True:
             self.get_logger().info("Rover has reached the object")
-            self.object_count = self.object_count + 1
             self.switch_state("PICKUP")
+            self.approaching = False
 
         else:
-            self.get_logger().info("Approach object service failed")
+            self.get_logger().info("Approach object service failed, backing up and returning to explore")
             self.switch_state("EXPLORE")
+            self.approaching = False
     
     def callback_detected(self,msg):
         if self.state == "EXPLORE":

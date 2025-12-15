@@ -67,7 +67,7 @@ class BackupNode(Node):
             return
 
         twist = Twist()
-        if self.distance < 0.4:
+        if self.distance < 0.6:
             twist.linear.x = -0.1
             self.get_logger().info(f"Backing up rover, current distance = {self.distance}")
             self.velocity_pub.publish(twist)
