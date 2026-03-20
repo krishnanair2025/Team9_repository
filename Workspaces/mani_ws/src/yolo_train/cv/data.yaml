@@ -1,0 +1,19 @@
+names:
+- green_bin
+- green_cylinder
+- red_bin
+- red_cylinder
+- yellow_bin
+- yellow_cylinder
+nc: 6
+roboflow:
+  license: Private
+  project: my-first-project-vtcgk
+  url: https://app.roboflow.com/leo-rover-zkfek/my-first-project-vtcgk/2
+  version: 2
+  workspace: leo-rover-zkfek
+# 以下三行是修正后的路径（核心修改）
+test: test/images
+train: train/images
+val: valid/images
+
