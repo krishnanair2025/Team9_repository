@@ -1,0 +1,2 @@
+[console_scripts]
+yolo_realsense_node = cylinder_detector_pkg.yolo_realsense_node:main
