@@ -24,4 +24,8 @@ The repository contains directories for the team's documents, including the upda
 + Lexin Wang (Navigation and Mapping sub-team)
 + Mochi Zhang (Object Perception sub-team)
 
+## Navigation Simulation
+
+https://github.com/user-attachments/assets/b19657b1-ff3d-47d2-9826-172c5d89c94a
+
 
