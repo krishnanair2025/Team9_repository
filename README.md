@@ -17,12 +17,12 @@ To achieve this, the team is structured into sub-teams:
 The repository contains directories for the team's documents, including the updated workplace charter, Design Review Analysis and Preliminary Design Review. The packages directory holds each sub-team's ROS2 workspace.
 
 ## Team members:
-+ Krishna Nair (Navigation and Mapping sub-team, Payload sled design)
-+ Drago Jakimovski (Manipulation sub-team)
-+ Mengjie Zhang (Manipulation sub-team)
-+ Lun Li (Object Perception sub-team)
-+ Lexin Wang (Navigation and Mapping sub-team)
-+ Mochi Zhang (Object Perception sub-team)
++ Krishna Nair (Navigation and Mapping, Payload sled design)
++ Drago Jakimovski (Manipulation)
++ Mengjie Zhang (Manipulation)
++ Lun Li (Object Perception)
++ Lexin Wang (Navigation and Mapping)
++ Mochi Zhang (Object Perception)
 
 ## Navigation Simulation
 
