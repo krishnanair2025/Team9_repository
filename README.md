@@ -26,6 +26,8 @@ The repository contains directories for the team's documents, including the upda
 
 ## Navigation Simulation
 
+The following video shows a preview of the working navigation simulation in Gazebo. It operates using the mission state machine (task_manager_node) and a simple openCV based green object detecting camera node. It simulates the manipulator working by using a random timer between 30-60s as there is no simulated manipulator in this setup.
+
 https://github.com/user-attachments/assets/b19657b1-ff3d-47d2-9826-172c5d89c94a
 
 
