@@ -31,6 +31,14 @@ def generate_launch_description():
         output='screen',
         parameters=[{'use_sim_time': True}],
     )
+    
+    point_cloud_node = Node(
+        package='point_cloud_gen_pkg',
+        executable='point_cloud_gen_node',
+        name='point_cloud_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
 
     slam_params_path = os.path.expanduser(
         '~/Team9_repository/Workspaces/nav_ws/src/config/mapper_params_online_async.yaml'
@@ -105,9 +113,9 @@ def generate_launch_description():
         output = 'screen'
     )
 
-    move_to_coord = Node(
-        package = 'move_to_coord_pkg',
-        executable = 'move_to_coord_node',
+    move_to_spawn = Node(
+        package = 'move_to_spawn_pkg',
+        executable = 'move_to_spawn_node',
         output = 'screen'
     )
 
@@ -121,6 +129,12 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
         parameters=[{'use_sim_time': True}]
     )
+    
+    temp_manipulator_node = Node(
+        package = 'temp_manipulator_pkg',
+        executable = 'temp_manipulator_node',
+        output = 'screen'
+    )
 
     backup_node = Node(
         package = 'backup_pkg',
@@ -133,6 +147,7 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         gazebo_launch,
         scan_filtering_node,
+        point_cloud_node,
         slam_launch,
         nav2_launch,
         frontier_exploration,
@@ -140,7 +155,8 @@ def generate_launch_description():
         #dummy_object_detection,
         task_manager,
         approach_object,
-        move_to_coord,
+        move_to_spawn,
         backup_node,
+        temp_manipulator_node,
         rviz_node
     ])

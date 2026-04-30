@@ -20,8 +20,8 @@ import math
 
 class GreenObjectDetector(Node):
 
-    REQUIRED_STABLE_FRAMES = 10
-    TEMPORAL_XY_TOLERANCE = 0.2     # meters (tight consistency check)
+    REQUIRED_STABLE_FRAMES = 5 #10
+    TEMPORAL_XY_TOLERANCE = 0.35 #0.2    # meters (tight consistency check)
     SEEN_OBJECT_TOLERANCE = 1.0      # meters (1x1m grid)
 
     def __init__(self):
@@ -48,11 +48,11 @@ class GreenObjectDetector(Node):
         # Publishers
         self.annotated_pub = self.create_publisher(Image, '/green_objects/annotated_image', 10)
         self.detected_flag_pub = self.create_publisher(Bool, 'detected_flag', 10)
-        self.object_location_pub = self.create_publisher(PoseStamped, 'object_location', 10)
+        self.object_location_pub = self.create_publisher(PointStamped, '/cylinder_point_map', 10)
 
         # >>> ADDED publisher (camera-frame, continuous)
         self.cam_object_pub = self.create_publisher(
-            PoseStamped, 'cam_obj_loc', 10
+            PointStamped, '/cylinder_point_cam', 10
         )
 
         # TF
@@ -122,10 +122,13 @@ class GreenObjectDetector(Node):
             if M['m00'] == 0:
                 continue
 
-            cx = int(M['m10'] / M['m00'])
-            cy = int(M['m01'] / M['m00'])
+            #cx = int(M['m10'] / M['m00'])
+            #cy = int(M['m01'] / M['m00'])
 
-            window = 2
+            cx = int(np.mean(cnt[:,0,0]))
+            cy = int(np.mean(cnt[:,0,1]))
+
+            window = 4
             x0, x1 = max(cx - window, 0), min(cx + window, self.latest_depth.shape[1] - 1)
             y0, y1 = max(cy - window, 0), min(cy + window, self.latest_depth.shape[0] - 1)
 
@@ -140,13 +143,12 @@ class GreenObjectDetector(Node):
             Y = (cy - self.cy) * Z / self.fy
 
             # >>> PREPARE + CONTINUOUSLY PUBLISH CAMERA-FRAME POSE
-            cam_pose = PoseStamped()
+            cam_pose = PointStamped()
             cam_pose.header.frame_id = self.camera_frame
             cam_pose.header.stamp = self.get_clock().now().to_msg()
-            cam_pose.pose.position.x = X
-            cam_pose.pose.position.y = Y
-            cam_pose.pose.position.z = Z
-            cam_pose.pose.orientation.w = 1.0
+            cam_pose.point.x = X
+            cam_pose.point.y = Y
+            cam_pose.point.z = Z
 
             self.cam_object_pub.publish(cam_pose)
 
@@ -184,13 +186,12 @@ class GreenObjectDetector(Node):
 
                     self.detected_flag_pub.publish(Bool(data=True))
 
-                    pose = PoseStamped()
+                    pose = PointStamped()
                     pose.header.frame_id = 'map'
                     pose.header.stamp = self.get_clock().now().to_msg()
-                    pose.pose.position.x = mean_x
-                    pose.pose.position.y = mean_y
-                    pose.pose.position.z = mean_z
-                    pose.pose.orientation.w = 1.0
+                    pose.point.x = mean_x
+                    pose.point.y = mean_y
+                    pose.point.z = mean_z
                     self.object_location_pub.publish(pose)
 
                 self.temporal_buffer.clear()

@@ -30,6 +30,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
+            'use_sim_time': 'false',
             'params_file': slam_params_path
         }.items()
     )
@@ -49,6 +50,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'slam': 'True',
+            'use_sim_time': 'false',
             'params_file': nav2_params_path
         }.items()
     )
@@ -73,10 +75,36 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path]
     )
 
+
+    # Lidar starter
+    rplidar_node = Node(
+        package='rplidar_ros',
+        executable='rplidar_node',
+        name='rplidar_node',
+        output='screen',
+        parameters=[{
+            'channel_type': 'serial',
+            'serial_port': '/dev/ttyUSB0',
+            'serial_baudrate': 256000,
+            'frame_id': 'laser_frame',
+            'inverted': False,
+            'angle_compensate': True,
+            'scan_mode': 'Sensitivity'
+        }]
+    )
+    
+    # Lidar TF publisher
+    lidar_tf_publisher = Node(
+        package = 'lidar_tf_publisher_node',
+        executable = 'lidar_tf_publisher_node',
+        output='screen')
+
     return LaunchDescription([
         scan_filtering,
         slam_launch,
         nav2_launch,
         frontier_exploration,
-        rviz_node
+        rviz_node,
+        rplidar_node,
+        lidar_tf_publisher
     ])

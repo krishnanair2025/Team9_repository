@@ -1,0 +1,408 @@
+<?xml version="1.0"?>
+
+<robot name="simple_robot" xmlns:xacro="https://www.ros.org/wiki/xacro">
+
+  <!-- include model parameters -->
+  <xacro:include filename="$(find demo_control)/model/parameters.xacro" />
+  <xacro:include filename="$(find demo_control)/model/gazebo.xacro" />
+
+  <!-- common mass -->
+  <xacro:property name="m_link" value="${107.5/1000}"/>
+
+  <!-- ================= BASE ================= -->
+  <link name="arm_base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${70/1000}" length="${80/1000}"/>
+      </geometry>
+      <origin xyz="0 0 ${35/1000}" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${70/1000}" length="${80/1000}"/>
+      </geometry>
+      <origin xyz="0 0 ${35/1000}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <!-- cylinder along z, COM at origin -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <!-- Ix = Iy = 1/12 m (3r^2 + h^2), Iz = 1/2 m r^2 -->
+      <inertia
+        ixx="${(1.0/12.0)*m_link*(3.0*(70/1000)*(70/1000) + (80/1000)*(80/1000))}"
+        iyy="${(1.0/12.0)*m_link*(3.0*(70/1000)*(70/1000) + (80/1000)*(80/1000))}"
+        izz="${0.5*m_link*(70/1000)*(70/1000)}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <!-- FIXED TO WORLD -->
+  <joint name="world_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_base_link"/>
+    <origin xyz="${41.639/1000} 0 ${(90/1000)}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ================= LINK 1 ================= -->
+  <link name="link_1">
+    <visual>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${85.31/1000}"/>
+      </geometry>
+      <origin xyz="0 0 ${(85.31/1000)/2}"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${85.31/1000}"/>
+      </geometry>
+      <origin xyz="0 0 ${(85.31/1000)/2}"/>
+    </collision>
+    <inertial>
+      <!-- COM matches visual/collision origin -->
+      <origin xyz="0 0 ${(85.31/1000)/2}" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <!-- box: Ix = 1/12 m (y^2+z^2), Iy = 1/12 m (x^2+z^2), Iz = 1/12 m (x^2+y^2) -->
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (85.31/1000)*(85.31/1000))}"
+        iyy="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (85.31/1000)*(85.31/1000))}"
+        izz="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (48/1000)*(48/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_1" type="revolute">
+    <parent link="arm_base_link"/>
+    <child link="link_1"/>
+    <origin xyz="0 0 ${(85.31/1000)/2}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="5000" velocity="10" lower="-2.87979" upper="2.87979"/>
+  </joint>
+
+  <!-- ================= LINK 2 ================= -->
+  <link name="link_2">
+    <visual>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${156.17/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-24/1000} ${54.083/1000}"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${156.17/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-24/1000} ${54.083/1000}"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${-24/1000} ${54.083/1000}" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (156.17/1000)*(156.17/1000))}"
+        iyy="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (156.17/1000)*(156.17/1000))}"
+        izz="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (48/1000)*(48/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_2" type="revolute">
+    <parent link="link_1"/>
+    <child link="link_2"/>
+    <origin xyz="0 ${-24/1000} ${61.311/1000}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="5000" velocity="10" lower="-2.87979" upper="2.87979"/>
+  </joint>
+
+  <!-- ================= LINK 3 (VERTICAL) ================= -->
+  <link name="link_3">
+    <visual>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${135.8/1000}"/>
+      </geometry>
+      <origin xyz="0 ${24/1000} ${43.902/1000}"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${135.8/1000}"/>
+      </geometry>
+      <origin xyz="0 ${24/1000} ${43.902/1000}"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${24/1000} ${43.902/1000}" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (135.8/1000)*(135.8/1000))}"
+        iyy="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (135.8/1000)*(135.8/1000))}"
+        izz="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (48/1000)*(48/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_3" type="revolute">
+    <parent link="link_2"/>
+    <child link="link_3"/>
+    <origin xyz="0 0 ${108.165/1000}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="5000" velocity="10" lower="-2.87979" upper="2.87979"/>
+  </joint>
+
+  <!-- ================= LINK 4 ================= -->
+  <link name="link_4">
+    <visual>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${76/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-24/1000} ${14/1000}"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${48/1000} ${48/1000} ${76/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-24/1000} ${14/1000}"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${-24/1000} ${14/1000}" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (76/1000)*(76/1000))}"
+        iyy="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (76/1000)*(76/1000))}"
+        izz="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (48/1000)*(48/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_4" type="revolute">
+    <parent link="link_3"/>
+    <child link="link_4"/>
+    <origin xyz="0 0 ${87.603/1000}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="5000" velocity="10" lower="-2.87979" upper="2.87979"/>
+  </joint>
+
+  <!-- ================= LINK 5 ================= -->
+  <link name="link_5">
+    <visual>
+      <geometry>
+        <box size="${48/1000} ${64/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-8/1000} ${(18.5/1000)}"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${48/1000} ${64/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-8/1000} ${(18.5/1000)}"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${-8/1000} ${(18.5/1000)}" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((64/1000)*(64/1000) + (37/1000)*(37/1000))}"
+        iyy="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (37/1000)*(37/1000))}"
+        izz="${(1.0/12.0)*m_link*((48/1000)*(48/1000) + (64/1000)*(64/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_5" type="revolute">
+    <parent link="link_4"/>
+    <child link="link_5"/>
+    <origin xyz="0 ${-24/1000} ${52/1000}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="5000" velocity="10" lower="-2.87979" upper="2.87979"/>
+  </joint>
+
+  <!-- ================= Gripper base (END EFFECTOR) ================= -->
+  <link name="gripper_base">
+    <visual>
+      <geometry>
+        <box size="${55/1000} ${10/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-5/1000} 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${55/1000} ${10/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-5/1000} 0"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${-5/1000} 0" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((10/1000)*(10/1000) + (37/1000)*(37/1000))}"
+        iyy="${(1.0/12.0)*m_link*((55/1000)*(55/1000) + (37/1000)*(37/1000))}"
+        izz="${(1.0/12.0)*m_link*((55/1000)*(55/1000) + (10/1000)*(10/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_6" type="revolute">
+    <parent link="link_5"/>
+    <child link="gripper_base"/>
+    <origin xyz="0 ${-40/1000} ${18.5/1000}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="5000" velocity="10" lower="-3.12414" upper="3.12414"/>
+  </joint>
+
+  <!-- ================= Left finger (END EFFECTOR) ================= -->
+  <link name="left_finger">
+    <visual>
+      <geometry>
+        <box size="${5/1000} ${100/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-50/1000} 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${5/1000} ${100/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-50/1000} 0"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${-50/1000} 0" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((100/1000)*(100/1000) + (37/1000)*(37/1000))}"
+        iyy="${(1.0/12.0)*m_link*((5/1000)*(5/1000) + (37/1000)*(37/1000))}"
+        izz="${(1.0/12.0)*m_link*((5/1000)*(5/1000) + (100/1000)*(100/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_finger_joint" type="prismatic">
+    <parent link="gripper_base"/>
+    <child link="left_finger"/>
+    <origin xyz="${25/1000} ${-10/1000} 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="5000" velocity="10" lower="-0.0125" upper="0.0"/>
+  </joint>
+
+  <!-- ================= Right finger (END EFFECTOR) ================= -->
+  <link name="right_finger">
+    <visual>
+      <geometry>
+        <box size="${5/1000} ${100/1000} ${37/1000}"/>
+      </geometry>
+      <!-- Mirror of left finger -->
+      <origin xyz="0 ${-50/1000} 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${5/1000} ${100/1000} ${37/1000}"/>
+      </geometry>
+      <origin xyz="0 ${-50/1000} 0"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 ${-50/1000} 0" rpy="0 0 0"/>
+      <mass value="${m_link}"/>
+      <inertia
+        ixx="${(1.0/12.0)*m_link*((100/1000)*(100/1000) + (37/1000)*(37/1000))}"
+        iyy="${(1.0/12.0)*m_link*((5/1000)*(5/1000) + (37/1000)*(37/1000))}"
+        izz="${(1.0/12.0)*m_link*((5/1000)*(5/1000) + (100/1000)*(100/1000))}"
+        ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_finger_joint" type="prismatic">
+    <parent link="gripper_base"/>
+    <child link="right_finger"/>
+    <!-- Mirror position -->
+    <origin xyz="${-25/1000} ${-10/1000} 0" rpy="0 0 0"/>
+    <!-- Same axis direction -->
+    <axis xyz="1 0 0"/>
+    <limit effort="5000" velocity="10" lower="0.05" upper="0.0"/>
+  </joint>
+
+  <!-- ROS2 control plugins -->
+<ros2_control name="RobotController" type="system">
+
+  <hardware>
+    <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+  </hardware>
+
+  <!-- Arm joints -->
+  <joint name="joint_1">
+    <command_interface name="position">
+      <param name="min">-2.87979</param>
+      <param name="max">2.87979</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="joint_2">
+    <command_interface name="position">
+      <param name="min">-2.87979</param>
+      <param name="max">2.87979</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">-0.785398</param>
+    </state_interface>
+  </joint>
+
+  <joint name="joint_3">
+    <command_interface name="position">
+      <param name="min">-2.87979</param>
+      <param name="max">2.87979</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">0.785398</param>
+    </state_interface>
+  </joint>
+
+  <joint name="joint_4">
+    <command_interface name="position">
+      <param name="min">-2.87979</param>
+      <param name="max">2.87979</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">0.785398</param>
+    </state_interface>
+  </joint>
+
+  <joint name="joint_5">
+    <command_interface name="position">
+      <param name="min">-2.87979</param>
+      <param name="max">2.87979</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">1.570796</param>
+    </state_interface>
+  </joint>
+
+  <!-- Gripper base -->
+  <joint name="joint_6">
+    <command_interface name="position">
+      <param name="min">-3.14</param>
+      <param name="max">3.14</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <!-- Gripper joints -->
+  <joint name="left_finger_joint">
+    <command_interface name="position">
+      <param name="min">-0.0125</param>
+      <param name="max">0.0</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="right_finger_joint">
+    <command_interface name="position">
+      <param name="min">-0.0125</param>
+      <param name="max">0.0</param>
+    </command_interface>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+</ros2_control>
+
+</robot>
+

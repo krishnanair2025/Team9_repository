@@ -1,0 +1,344 @@
+<?xml version="1.0"?>
+<robot name="firefighter">
+
+  <!-- ================= BASE ================= -->
+  <link name="g_base">
+    <visual>
+      <geometry>
+        <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/G_base.dae"/>
+      </geometry>
+      <origin xyz="0 0 -0.03" rpy="0 0 1.5708"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/G_base.dae"/>
+      </geometry>
+      <origin xyz="0 0 -0.03" rpy="0 0 1.5708"/>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ================= LINKS (ALL WITH INERTIA) ================= -->
+
+  <!-- helper inertia -->
+  <!-- reused for all small links -->
+  <!-- DO NOT change geometry/origin -->
+
+  <!-- joint1 -->
+  <link name="joint1">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint1_pi.stl" scale="0.001 0.001 0.001"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint1_pi.stl" scale="0.001 0.001 0.001"/></geometry><origin xyz="0 0 0" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="joint2">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint2.dae"/></geometry><origin xyz="0 0 -0.06096" rpy="0 0 -1.5708"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint2.dae"/></geometry><origin xyz="0 0 -0.06096" rpy="0 0 -1.5708"/></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="joint3">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint3.dae"/></geometry><origin xyz="0 0 0.03256" rpy="0 -1.5708 0"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint3.dae"/></geometry><origin xyz="0 0 0.03256" rpy="0 -1.5708 0"/></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="joint4">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint4.dae"/></geometry><origin xyz="0 0 0.03056" rpy="0 -1.5708 0"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint4.dae"/></geometry><origin xyz="0 0 0.03056" rpy="0 -1.5708 0"/></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="joint5">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint5.stl" scale="0.001 0.001 0.001"/></geometry><origin xyz="0 -0.001 -0.0345" rpy="0 -1.5708 1.5708"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint5.stl" scale="0.001 0.001 0.001"/></geometry><origin xyz="0 -0.001 -0.0345" rpy="0 -1.5708 1.5708"/></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="joint6">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint6.dae"/></geometry><origin xyz="0 0 -0.038" rpy="0 0 0"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint6.dae"/></geometry><origin xyz="0 0 -0.038" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="joint6_flange">
+    <visual><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint7.dae"/></geometry><origin xyz="0 0 -0.012" rpy="0 0 0"/></visual>
+    <collision><geometry><mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/joint7.dae"/></geometry><origin xyz="0 0 -0.012" rpy="0 0 0"/></collision>
+    <inertial><mass value="0.3"/><inertia ixx="0.0005" iyy="0.0005" izz="0.0005" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <!-- ================= GRIPPER LINKS ================= -->
+
+  <link name="gripper_base">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_base.dae"/>
+    </geometry>
+    <origin xyz="0.0 0 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_base.dae"/>
+    </geometry>
+    <origin xyz="0.0 0 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.3"/>
+    <inertia ixx="0.0005" iyy="0.0005" izz="0.0005" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<link name="gripper_left1">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_left1.dae"/>
+    </geometry>
+    <origin xyz="0.039 -0.0133 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_left1.dae"/>
+    </geometry>
+    <origin xyz="0.039 -0.0133 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.1"/>
+    <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<link name="gripper_left2">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_left2.dae"/>
+    </geometry>
+    <origin xyz="0.005 -0.0195 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_left2.dae"/>
+    </geometry>
+    <origin xyz="0.005 -0.0195 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.1"/>
+    <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<link name="gripper_left3">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_left3.dae"/>
+    </geometry>
+    <origin xyz="0.012 0.0025 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_left3.dae"/>
+    </geometry>
+    <origin xyz="0.012 0.0025 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.1"/>
+    <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<link name="gripper_right1">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_right1.dae"/>
+    </geometry>
+    <origin xyz="-0.039 -0.0133 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_right1.dae"/>
+    </geometry>
+    <origin xyz="-0.039 -0.0133 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.1"/>
+    <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<link name="gripper_right2">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_right2.dae"/>
+    </geometry>
+    <origin xyz="-0.005 -0.0195 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_right2.dae"/>
+    </geometry>
+    <origin xyz="-0.005 -0.0195 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.1"/>
+    <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<link name="gripper_right3">
+  <visual>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_right3.dae"/>
+    </geometry>
+    <origin xyz="-0.012 0.0025 -0.012" rpy="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="/home/student14/Team9_repository/Workspaces/nav_ws/src/cobot_pkg/urdf/gripper_right3.dae"/>
+    </geometry>
+    <origin xyz="-0.012 0.0025 -0.012" rpy="0 0 0"/>
+  </collision>
+  <inertial>
+    <mass value="0.1"/>
+    <inertia ixx="1e-4" iyy="1e-4" izz="1e-4" ixy="0" ixz="0" iyz="0"/>
+  </inertial>
+</link>
+
+<joint name="g_base_to_joint1" type="fixed">
+    <parent link="g_base"/>
+    <child link="joint1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="joint2_to_joint1" type="revolute">
+    <parent link="joint1"/>
+    <child link="joint2"/>
+    <origin xyz="0 0 0.13956"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.9" upper="2.9" effort="100" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint3_to_joint2" type="revolute">
+    <parent link="joint2"/>
+    <child link="joint3"/>
+    <origin xyz="0 0 -0.001" rpy="0 1.5708 -1.5708"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.4" upper="2.4" effort="100" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint4_to_joint3" type="revolute">
+    <parent link="joint3"/>
+    <child link="joint4"/>
+    <origin xyz="-0.1104 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.6" upper="2.6" effort="100" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint5_to_joint4" type="revolute">
+    <parent link="joint4"/>
+    <child link="joint5"/>
+    <origin xyz="-0.096 0 0.06462" rpy="0 0 -1.5708"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.6" upper="2.6" effort="100" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint6_to_joint5" type="revolute">
+    <parent link="joint5"/>
+    <child link="joint6"/>
+    <origin xyz="0 -0.07318 -0.001" rpy="1.5708 -1.5708 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.7" upper="2.7" effort="100" velocity="1.0"/>
+  </joint>
+
+  <joint name="joint6output_to_joint6" type="revolute">
+    <parent link="joint6"/>
+    <child link="joint6_flange"/>
+    <origin xyz="0 0.0456 0" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="100" velocity="1.0"/>
+  </joint>
+
+  <!-- THIS IS THE CRITICAL FIX (connects second root) -->
+  <joint name="joint6output_to_gripper_base" type="fixed">
+    <parent link="joint6_flange"/>
+    <child link="gripper_base"/>
+    <origin xyz="0 0 0.034" rpy="1.579 0 0"/>
+  </joint>
+
+  <!-- ================= GRIPPER JOINTS ================= -->
+
+  <joint name="gripper_controller" type="revolute">
+    <parent link="gripper_base"/>
+    <child link="gripper_left3"/>
+    <origin xyz="-0.012 0.005 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.74" upper="0.15" effort="1000.0" velocity="0"/>
+  </joint>
+
+  <joint name="gripper_base_to_gripper_left2" type="revolute">
+    <parent link="gripper_base"/>
+    <child link="gripper_left2"/>
+    <origin xyz="-0.005 0.027 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.8" upper="0.5" effort="1000.0" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0"/>
+  </joint>
+
+  <joint name="gripper_left3_to_gripper_left1" type="revolute">
+    <parent link="gripper_left3"/>
+    <child link="gripper_left1"/>
+    <origin xyz="-0.027 0.016 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.5" upper="0.5" effort="1000.0" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="-1.0"/>
+  </joint>
+
+  <joint name="gripper_base_to_gripper_right3" type="revolute">
+    <parent link="gripper_base"/>
+    <child link="gripper_right3"/>
+    <origin xyz="0.012 0.005 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.15" upper="0.7" effort="1000.0" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="-1.0"/>
+  </joint>
+
+  <joint name="gripper_base_to_gripper_right2" type="revolute">
+    <parent link="gripper_base"/>
+    <child link="gripper_right2"/>
+    <origin xyz="0.005 0.027 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.5" upper="0.8" effort="1000.0" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="-1.0"/>
+  </joint>
+
+  <joint name="gripper_right3_to_gripper_right1" type="revolute">
+    <parent link="gripper_right3"/>
+    <child link="gripper_right1"/>
+    <origin xyz="0.027 0.016 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.5" upper="0.5" effort="1000.0" velocity="0"/>
+    <mimic joint="gripper_controller" multiplier="1.0"/>
+  </joint>
+
+  <!-- ================= ROS2 CONTROL ================= -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <joint name="joint2_to_joint1"><command_interface name="position"/><state_interface name="position"/></joint>
+    <joint name="joint3_to_joint2"><command_interface name="position"/><state_interface name="position"/></joint>
+    <joint name="joint4_to_joint3"><command_interface name="position"/><state_interface name="position"/></joint>
+    <joint name="joint5_to_joint4"><command_interface name="position"/><state_interface name="position"/></joint>
+    <joint name="joint6_to_joint5"><command_interface name="position"/><state_interface name="position"/></joint>
+    <joint name="joint6output_to_joint6"><command_interface name="position"/><state_interface name="position"/></joint>
+  </ros2_control>
+
+  <!-- ================= GAZEBO ================= -->
+  <gazebo>
+    <plugin filename="libgz_ros2_control-system.so"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin"/>
+  </gazebo>
+
+</robot>

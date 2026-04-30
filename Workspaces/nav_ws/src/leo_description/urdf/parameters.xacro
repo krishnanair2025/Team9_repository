@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="https://www.ros.org/wiki/xacro">
+
+<!-- Link Dimensions -->
+
+<xacro:property name="a" value="0.1" />
+<xacro:property name="b" value="0.1" />
+<xacro:property name="c" value="0.8" />
+
+<!-- COM w.r.t link frame -->
+<xacro:property name="s" value="${c/2}" />
+
+<!-- First joint displacement w.r.t Z-axis -->
+<xacro:property name="q" value="${c-c/4}" />
+
+<!-- Material density -->
+<xacro:property name="d" value="${2710.0}" />#
+
+<!-- Mass -->
+<xacro:property name="m" value="${107.5/1000}" />
+
+<!-- Moments of inertia -->
+<xacro:property name="Ix_body" value="${(1/12)*m*(b*b+c*c)}" />
+<xacro:property name="Iy_body" value="${(1/12)*m*(a*a+b*b)}" />
+<xacro:property name="Iz_body" value="${(1/12)*m*(a*a+c*c)}" />
+
+<!-- Dimensions (meters) -->
+<xacro:property name="link_w" value="0.048"/>   <!-- 48 mm -->
+<xacro:property name="link_h" value="0.048"/>
+
+<!-- Base -->
+<xacro:property name="base_radius" value="0.04676"/> <!-- 93.52 / 2 -->
+<xacro:property name="base_height" value="0.08336"/>
+
+<!-- Vertical spacings -->
+<xacro:property name="z1" value="0.14467"/>
+<xacro:property name="z2" value="0.10817"/>
+<xacro:property name="z3" value="0.0878"/>
+<xacro:property name="z4" value="0.0705"/>
+<xacro:property name="z5" value="0.037"/>
+
+<!-- Link lengths -->
+<xacro:property name="L1" value="0.08531"/>
+<xacro:property name="L2" value="0.1358"/>
+<xacro:property name="L3" value="0.076"/>
+<xacro:property name="L4" value="0.024"/>
+<xacro:property name="L5" value="0.064"/>
+
+<!-- Inertial sections -->
+<xacro:macro name="inertia_body">
+    <inertial>
+    <origin rpy="0 0 0" xyz="0 0 ${s}"/>
+    <mass value="${m}"/>
+    <inertia ixx="${Ix_body}" ixy="0.0" ixz="0.0" iyy="${Iy_body}" iyz="0" izz="${Iz_body}"/>
+    </inertial>
+</xacro:macro>
+
+<!-- Colours -->
+<material name="blue">
+    <color rgba="0 0 1 1"/>
+</material>
+
+<material name="red">
+    <color rgba="1 0 0 1"/>
+</material>
+
+
+
+
+</robot>
+
+
+
+
+

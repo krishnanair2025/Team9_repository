@@ -37,7 +37,7 @@
 
   <!-- ====================== MOUNT JOINT ====================== -->
   <joint name="realsense_mount_joint" type="fixed">
-    <origin xyz="0.10 0 0.1" rpy="0 0 0"/> 
+    <origin xyz="0.17 0.0 0.0225" rpy="0 0 0"/> 
     <parent link="base_link"/>  <!-- change to your robot’s base link -->
     <child link="realsense_link"/>
   </joint>

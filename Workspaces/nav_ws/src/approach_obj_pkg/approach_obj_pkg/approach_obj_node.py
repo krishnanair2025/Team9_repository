@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import PoseStamped, Twist
+from geometry_msgs.msg import PoseStamped, Twist, PointStamped
 from tf2_ros import Buffer, TransformListener
 from nav_msgs.msg import OccupancyGrid
 from example_interfaces.srv import SetBool, Trigger
@@ -34,16 +34,16 @@ class ApproachObjNode(Node):
 
         # Subscriber to receive object coordinates from message published by object detection node.
         self.coords_sub = self.create_subscription(
-            PoseStamped,
-            '/object_location',
+            PointStamped,
+            '/cylinder_point_map',
             self.coord_retrieval_callback,
             10
         )
 
         # Subscriber to pose of object in camera's frame
-        self.pose_pub = self.create_subscription(
-            PoseStamped,
-            'cam_obj_loc',
+        self.pose_sub = self.create_subscription(
+            PointStamped,
+            '/cylinder_point_cam',
             self.pose_callback,
             10
         )
@@ -76,7 +76,7 @@ class ApproachObjNode(Node):
         self.box_dim = 205/1000
         self.box_radius = np.sqrt((self.box_dim**2)+(self.box_dim**2))/2
         self.rover_dims = [448/1000,425/1000]
-        self.buffer = 50/1000
+        self.buffer = 0.0
         self.rover_radius = self.buffer + (np.sqrt((self.rover_dims[0]**2) + (self.rover_dims[1]**2)))/2
         self.rover_coords = None # current coordinate of rover, to be filled in when received
         self.optimal_radius = self.rover_radius + self.box_radius
@@ -135,10 +135,10 @@ class ApproachObjNode(Node):
     
 
     # Store latest object coordinates
-    def coord_retrieval_callback(self, msg: PoseStamped):
+    def coord_retrieval_callback(self, msg: PointStamped):
         self.latest_pose = msg
         self.get_logger().info(
-            f"Updated target coords: x={msg.pose.position.x}, y={msg.pose.position.y}"
+            f"Updated target coords: x={msg.point.x}, y={msg.point.y}"
         )
 
     def robot_pose_callback(self):
@@ -152,9 +152,9 @@ class ApproachObjNode(Node):
             pass
 
 
-    def find_candidate_points(self,msg:PoseStamped):
-        wx_box = msg.pose.position.x
-        wy_box = msg.pose.position.y
+    def find_candidate_points(self,msg:PointStamped):
+        wx_box = msg.point.x
+        wy_box = msg.point.y
 
         self.c_box = [wx_box,wy_box]
 
@@ -206,7 +206,7 @@ class ApproachObjNode(Node):
 
             footprint_mask = self.costmap_data[gy_start:gy_end+1, gx_start:gx_end+1]
 
-            if np.all((footprint_mask < 100) | (footprint_mask == 255)):
+            if np.all((footprint_mask != 255)):
                 safe_points.append(point)
 
         if not safe_points:
@@ -338,9 +338,9 @@ class ApproachObjNode(Node):
             self.active = False
 
 
-    def pose_callback(self, msg: PoseStamped):
-        self.x = msg.pose.position.x
-        self.distance = msg.pose.position.z
+    def pose_callback(self, msg: PointStamped):
+        self.x = msg.point.x
+        self.distance = msg.point.z
 
 
     def align_object(self):
@@ -351,7 +351,7 @@ class ApproachObjNode(Node):
         twist = Twist()
         twist.angular.z = 0.0
 
-        if abs(self.x) > 0.02:
+        if abs(self.x) > 0.001:
             twist.angular.z = 0.1 if self.x < 0 else -0.1
             self.get_logger().info(f"Rotating {'left' if self.x < 0 else 'right'}")
             self.velocity_pub.publish(twist)
@@ -369,7 +369,7 @@ class ApproachObjNode(Node):
         
         twist = Twist()
 
-        if self.distance > 0.2:
+        if self.distance > 0.18:
             twist.linear.x = 0.1
             self.velocity_pub.publish(twist)
             self.get_logger().info(f"Moving closer, current distance = {self.distance}")

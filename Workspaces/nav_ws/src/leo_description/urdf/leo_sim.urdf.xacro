@@ -10,6 +10,9 @@
   <xacro:include filename="lidar.xacro"/>
   <xacro:include filename="NUC.xacro"/>
   <xacro:include filename="depth_camera.xacro"/>
+  <xacro:include filename="model.xacro"/>
+  <xacro:include filename="storage_box.xacro"/>
+  <xacro:include filename="tracking_cams.xacro"/>
 
   
 

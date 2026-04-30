@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="leo_storage_box">
+
+  <!-- ============================
+       Constants
+  ============================= -->
+
+  <!-- ============================
+       Global Material Definition
+  ============================= -->
+  <material name="storage_box_material">
+    <color rgba="0.6 0.6 0.6 1.0"/>
+    <ambient>0.2 0.2 0.2 1.0</ambient>
+    <diffuse>0.6 0.6 0.6 1.0</diffuse>
+    <specular>0.8 0.8 0.8 1.0</specular>
+    <emission>0.05 0.05 0.05 1.0</emission>
+  </material>
+
+
+  <!-- ============================
+       Storage Box Mounting Joint
+  ============================= -->
+  <joint name="storage_box_joint" type="fixed">
+    <origin xyz="${-165.097/1000} 0 ${90/1000}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="storage_box_link"/>
+  </joint>
+
+  <!-- ============================
+       Storage Box Link
+  ============================= -->
+  <link name="storage_box_link">
+
+    <visual>
+      <origin xyz="${43.273/1000} 0 ${2/1000}" rpy="0 0 ${pi}"/>
+      <geometry>
+        <mesh filename="package://leo_description/models/storage_box.stl"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="storage_box_material"/>
+    </visual>
+
+    <collision>
+      <origin xyz="${43.273/1000} 0 ${2/1000}" rpy="0 0 ${pi}"/>
+      <geometry>
+        <mesh filename="package://leo_description/models/storage_box.stl"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+</robot>
+

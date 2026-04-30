@@ -1,78 +1,59 @@
 <?xml version="1.0"?>
-<robot>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <joint name="rplidar_joint" type="fixed"> #  <!--Specifying fixed joint -->
-    <origin xyz="0.0841 0 0.0115"/> <!--Defining position w.r.t parent link (body_link)   -->
-    <parent link="base_link"/>  <!-- # What the lidar is being attached to -->
-    <child link="rplidar_link"/> <!-- # The lidar -->
-  </joint>   
-  
-  
-  <!--Defining visual and collision properties of lidar (could add 3D model of lidar) -->
-  <link name="rplidar_link"> <!--Defining lidar link name  -->
+  <!-- ============================
+       LIDAR MOUNTING JOINT
+  ============================= -->
+  <joint name="rplidar_joint" type="fixed">
+    <!-- Position of lidar relative to rover base_link -->
+    <origin xyz="${84.806/1000} 0 ${15/1000}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="rplidar_link"/>
+  </joint>
 
 
-    <!--Visual properties of lidar's base-->
+  <!-- ============================
+       LIDAR LINK + STL GEOMETRY
+  ============================= -->
+  <link name="rplidar_link">
 
+    <!-- Visual model -->
     <visual>
-      <origin xyz="0 0 0.0015"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.080 0.087 0.0185"/>
+        <mesh filename="package://leo_description/models/lidar_holder.stl"
+              scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="support">
-        <color rgba="0.5 0.5 0.5 1.0"/>
-      </material>
     </visual>
-    
-    <!--Visual properties of lidar's main body -->
-    <visual>
-      <origin xyz="0 0 0.0263"/>
-      <geometry>
-        <cylinder radius="0.038" length="0.041"/>
-      </geometry>
-      <material name="lidar">
-        <color rgba="1.0 0.0 0.0 0.7"/>
-      </material>
-    </visual>
-    
-    <!-- Collision properties of lidar's base -->
+
+    <!-- Collision model -->
     <collision>
-      <origin xyz="0 0 0.0015"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.080 0.087 0.0185"/>
+        <mesh filename="package://leo_description/models/lidar_holder.stl"
+              scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
-    
-    <!-- Collision properties of lidar's main body -->
-    <collision>
-      <origin xyz="0 0 0.0263"/>
-      <geometry>
-        <cylinder radius="0.038" length="0.041"/>
-      </geometry>
-    </collision>
-    
+
   </link>
 
-  <!--<gazebo>
-    <plugin
-      filename="gz-sim-sensors-system"
-      name="gz::sim::systems::Sensors">
-      <frame_id>rplidar_link</frame_id>
-      <render_engine>ogre2</render_engine>
-    </plugin>
-  </gazebo>-->
 
-  <gazebo reference = "rplidar_link">
-    <sensor name = "base_scan" type = "gpu_lidar">
-      <pose relative_to='rplidar_link'> 0 0 0.035 0 0 0 </pose>
+  <!-- ============================
+       GAZEBO GPU LIDAR SENSOR
+  ============================= -->
+  <gazebo reference="rplidar_link">
+    <sensor name="base_scan" type="gpu_lidar">
+
+      <!-- Sensor pose relative to rplidar_link -->
+      <pose relative_to="rplidar_link">0 0 0.0495 0 0 0</pose>
 
       <topic>scan</topic>
       <gz_frame_id>rplidar_link</gz_frame_id>
       <update_rate>15</update_rate>
 
       <lidar>
-        <scan> 
-          <horizontal> 
+        <scan>
+          <horizontal>
             <samples>360</samples>
             <resolution>1</resolution>
             <min_angle>-3.14</min_angle>
@@ -81,28 +62,29 @@
         </scan>
 
         <range>
-          <min>0.03</min>
+          <min>0.2225</min>
           <max>12</max>
           <resolution>0.005</resolution>
         </range>
       </lidar>
 
       <always_on>1</always_on>
-      <visualize>1</visualize>     
+      <visualize>1</visualize>
+
     </sensor>
   </gazebo>
-          
 
-<link name="leo_rover/base_footprint/base_scan"/>
 
-<joint name="scan_tf_joint" type="fixed">
-  <origin xyz="0 0 0.483" rpy="0 0 ${-pi/2}"/>
-  <parent link="rplidar_link"/>
-  <child link="leo_rover/base_footprint/base_scan"/>
-</joint> 
+  <!-- ============================
+       TF LINK FOR SCAN FRAME
+  ============================= -->
+  <link name="leo_rover/base_footprint/base_scan"/>
+
+  <joint name="scan_tf_joint" type="fixed">
+    <origin xyz="0 0 ${49.5/1000}" rpy="0 0 ${-pi/2}"/>
+    <parent link="rplidar_link"/>
+    <child link="leo_rover/base_footprint/base_scan"/>
+  </joint>
 
 </robot>
-
-
-
 

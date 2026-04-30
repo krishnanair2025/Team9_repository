@@ -7,7 +7,7 @@
 # Imports 
 import rclpy 
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int32
 from example_interfaces.srv import SetBool, Trigger
 from geometry_msgs.msg import PoseStamped 
 import time
@@ -61,6 +61,12 @@ class TaskManagerNode(Node):
             '/approach_object',
         )
 
+        # To start manipulator service
+        self.manipulator_trigger_client = self.create_client(
+            Trigger,
+            '/trigger_arm',
+        )
+
         # To call backup service
         self.backup_client = self.create_client(
             Trigger,
@@ -69,9 +75,9 @@ class TaskManagerNode(Node):
 
         
         # Service client to call move_to_coord node with request to move rover to target coordinates
-        self.move_to_coord_client = self.create_client(
-            SetBool,
-            '/move_to_coord',
+        self.move_to_spawn_client = self.create_client(
+            Trigger,
+            '/move_to_spawn',
         )
 
 
@@ -85,6 +91,14 @@ class TaskManagerNode(Node):
             10
         )
         
+        # To check whether move_to_coord node has succesfully moved rover to coordinates
+        self.reached_sub = self.create_subscription(
+            Bool,
+            '/manipulator_success',
+            self.manipulator_success_callback,
+            10
+        )
+
         # To monitor whether object detection node has detected a coloured object
         self.detection_sub = self.create_subscription(
             Bool,
@@ -101,10 +115,26 @@ class TaskManagerNode(Node):
             10
         )
 
+        # To monitor return to spawn success 
+        self.reached_spawn_sub = self.create_subscription(
+            Bool,
+            'reached_spawn',
+            self.reached_spawn_callback,
+            10
+        )
+
+        # Publisher for slot 
+        self.slot_pub = self.create_publisher(
+            Int32,
+            '/slot',
+            10
+        )
+
         ########## INTERNAL VARIABLES ##########
         self.state = "IDLE"
         self.get_logger().info(f"Robot in {self.state} state")
         self.object_count = 0 #replace with array of colours in order collected
+        self.slot_number = 1
 
         # Status variables
         self.mission_active = False
@@ -122,6 +152,9 @@ class TaskManagerNode(Node):
 
         # Timer for main mission loop
         self.mission_timer = self.create_timer(0.1,self.mission_state)
+
+        # Timer for publishing slot number
+        self.slot_timer = self.create_timer(0.1,self.publish_slot)
 
     #################### MAIN STATE MACHINE LOOP ####################
 
@@ -148,6 +181,7 @@ class TaskManagerNode(Node):
         elif self.state == "RETURN_TO_START":
             self.execute_return()
 
+    
     #################### STATE EXECUTE FUNCTIONS ####################
 
     def execute_idle(self):
@@ -198,14 +232,37 @@ class TaskManagerNode(Node):
             self.approaching = True
 
     def execute_pickup(self):
-        if self.state == "PICKUP":
-            self.get_logger().info("Simulating manipulator task (30s)")
-            time.sleep(30.0)
-            self.object_count = self.object_count + 1
-            self.switch_state("BACKING_UP")
-            self.get_logger().info(f"Picked object, number of objects stored: {self.object_count}")
+
+        # ================= TEMPORARY MANUAL CONTROL MODE =================
+        # Rover does nothing in PICKUP state so you can manually control the arm
+
+        #if not self.arm_active:
+         #   self.get_logger().info("PICKUP state: manual arm control enabled. Rover is idle.")
+          #  self.arm_active = True  # prevent repeated logging
+
+        #return
+
+        if not self.manipulator_trigger_client.service_is_ready():
+            self.get_logger().warn("Manipulator service not ready yet")
+            return
+            
+        if not self.arm_active:
+            # Triggering manipulator service
+            manipulator_trigger_req = Trigger.Request()
+
+            future = self.manipulator_trigger_client.call_async(manipulator_trigger_req)
+            future.add_done_callback(self.manipulator_trigger_response)
+            self.arm_active = True
 
     def execute_backup(self):
+
+        #if not self.backing_up:
+        #    self.get_logger().info("Idle")
+        #    self.backing_up = True
+
+         #   return 
+
+        #"""
         if not self.backing_up:
             self.get_logger().info("Backing up rover")
             backup_req = Trigger.Request()
@@ -213,13 +270,21 @@ class TaskManagerNode(Node):
             future = self.backup_client.call_async(backup_req)
             future.add_done_callback(self.backup_trigger_response)
             self.backing_up = True
+        #"""
 
     def execute_return(self):
+
+        if not self.move_to_spawn_client.service_is_ready():
+            self.get_logger().warn("Move to spawn service not ready yet")
+            return
+
         if not self.returning:
             self.get_logger().info("RETURNING TO START")
-            self.end_time = time.time()
-            duration = (self.end_time - self.start_time)/60
-            self.get_logger().info(f"Time till all objects collected: {duration} mins")
+            # Triggering move to spawn service
+            move_to_spawn_req = Trigger.Request()
+
+            future = self.move_to_spawn_client.call_async(move_to_spawn_req)
+            future.add_done_callback(self.move_to_spawn_trigger_response)
             self.returning = True
 
     #################### SERVICE RESPONSES ####################
@@ -259,6 +324,35 @@ class TaskManagerNode(Node):
         
         except Exception as e:
             self.get_logger().error(f"Approach service call failed: {e}")
+
+    def manipulator_trigger_response(self,future):
+        try:
+            manipulator_response = future.result()
+
+            if manipulator_response.success:
+                self.get_logger().info(manipulator_response.message)
+            else:
+                self.get_logger().info(manipulator_response.message)
+        
+        except Exception as e:
+            self.get_logger().error(f"Manipulator service call failed: {e}")
+
+    def move_to_spawn_trigger_response(self,future):
+        try:
+            move_to_spawn_response = future.result()
+
+            if move_to_spawn_response.success:
+                self.get_logger().info(move_to_spawn_response.message)
+            else:
+                self.get_logger().info(move_to_spawn_response.message)
+        
+        except Exception as e:
+            self.get_logger().error(f"Move to spawn service call failed: {e}")
+
+    def publish_slot(self):
+        msg = Int32()
+        msg.data = self.slot_number
+        self.slot_pub.publish(msg)
 
 
     #################### CALLBACK FUNCTIONS ####################
@@ -327,6 +421,50 @@ class TaskManagerNode(Node):
             else:
                 self.get_logger().info("Continuing exploration")
                 self.switch_state("EXPLORE")
+
+    def manipulator_success_callback(self,msg):
+        if msg.data == True:
+            self.get_logger().info("Object successfully stored")
+
+            # Updating number of objects stored
+            self.object_count = self.object_count + 1
+            self.slot_number = self.slot_number + 1
+            self.get_logger().info(f"Picked object, number of objects stored: {self.object_count}")
+            
+            # COMMENT OUT AFTER MANUAL CONTROL OF ARM
+            #self.get_logger().info("TEMP MANUAL ARM MODE: Task manager paused after manipulator success.")
+            #self.switch_state("IDLE")
+            #self.mission_active = False
+            #self.arm_active = False
+            #return
+
+            # Switching state to backup 
+            self.switch_state("BACKING_UP")
+            self.arm_active = False
+
+        else:
+            # Setting arm active variable to False so that manipulator service is triggered again in pickup_execute function
+            self.get_logger().info("Manipulator service has failed. Attempting again.")
+            self.arm_active = False
+
+    def reached_spawn_callback(self,msg):
+        if msg.data == True:
+            self.get_logger().info("Successfully returned to spawn")
+
+            self.end_time = time.time()
+            duration = (self.end_time - self.start_time)/60
+            self.get_logger().info(f"Time till all objects collected and returned to spawn: {duration} mins")
+
+            # Switching state to idle 
+            self.switch_state("IDLE")
+            self.returning = False
+
+        else:
+            # Setting returning variable to False so that move to spawn service is triggered again in execute_return function
+            self.get_logger().info("Move to spawn service has failed. Attempting again.")
+            self.returning = False
+
+
 
 
 

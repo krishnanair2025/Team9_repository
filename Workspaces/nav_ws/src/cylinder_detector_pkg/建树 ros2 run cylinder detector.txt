@@ -1,0 +1,24 @@
+建树
+ros2 run cylinder_detector_pkg yolo_realsense_node
+
+
+
+# 1) base_link -> arm_base_link（占位）
+ros2 run tf2_ros static_transform_publisher 0.05 0 0.09 0 0 0 base_link arm_base_link
+
+# 2) base_link -> camera_link（占位）
+ros2 run tf2_ros static_transform_publisher 0.11 0 0.09 0 0 0 base_link camera_link
+
+# 3) camera_link -> camera_frame（固定光学旋转）
+ros2 run tf2_ros static_transform_publisher 0 0 0 0.5 -0.5 0.5 -0.5 camera_link camera_frame
+  
+ros2 topic echo /tf_static --once
+ros2 run tf2_tools view_frames
+
+ros2 run tf2_ros tf2_echo arm_base_link camera_frame
+
+检查：
+ros2 topic echo /cylinder_point_cam
+ros2 topic echo /cylinder_point_arm
+ros2 topic echo /cylinder_class
+ros2 topic echo /cylinder_target
